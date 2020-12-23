@@ -10,10 +10,10 @@ namespace FileContainer
     public class EntryReadonlyStream : Stream
     {
         [NotNull] readonly PagedContainerAbstract parent;
-        [NotNull] readonly FileContainerEntry     entry;
+        [NotNull] readonly PagedContainerEntry     entry;
         [NotNull] readonly int[]                  pages;
 
-        internal EntryReadonlyStream([NotNull] PagedContainerAbstract parent, [NotNull] FileContainerEntry entry)
+        internal EntryReadonlyStream([NotNull] PagedContainerAbstract parent, [NotNull] PagedContainerEntry entry)
         {
             this.parent = parent;
             this.entry  = entry;

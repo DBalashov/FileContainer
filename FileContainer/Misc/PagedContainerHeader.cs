@@ -6,7 +6,7 @@ using JetBrains.Annotations;
 
 namespace FileContainer
 {
-    class FileContainerHeader
+    class PagedContainerHeader
     {
         const int HEADER_PART = 12;
 
@@ -20,14 +20,14 @@ namespace FileContainer
         /// <summary> first page index of entries directory. 0 for new files, will updated after adding first entry </summary>
         public int DirectoryFirstPage;
 
-        internal FileContainerHeader(int pageSize)
+        internal PagedContainerHeader(int pageSize)
         {
             validatePageSize(pageSize);
             PageSize         = pageSize;
             PageUserDataSize = pageSize - 4;
         }
 
-        internal FileContainerHeader([NotNull] Stream stm)
+        internal PagedContainerHeader([NotNull] Stream stm)
         {
             if (stm.Length < HEADER_PART)
                 throw new InvalidDataException($"KVFileHeader: File corrupted (too small)");
@@ -71,7 +71,7 @@ namespace FileContainer
         }
 
         /// <summary> возвращает количество требуемых страниц для переданного количества байтов (с вычетом служебных данных в конце страницы) </summary>
-        public int GetRequiredPages(int lengthInBytes) => 
+        public int GetRequiredPages(int lengthInBytes) =>
             (int) Math.Ceiling(lengthInBytes / (double) PageUserDataSize);
 
 #if DEBUG

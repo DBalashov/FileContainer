@@ -11,7 +11,7 @@ namespace FileContainer
         /// Last of 32 bit of each page contain pointer for next page index.
         /// Last page in sequence contain point == 0
         /// </summary>
-        internal static void WriteIntoPages([NotNull] this Stream stm, [NotNull] FileContainerHeader header, [NotNull] byte[] data, int offset, [NotNull] int[] targetPages)
+        internal static void WriteIntoPages([NotNull] this Stream stm, [NotNull] PagedContainerHeader header, [NotNull] byte[] data, int offset, [NotNull] int[] targetPages)
         {
             for (var i = 0; i < targetPages.Length; i++)
             {

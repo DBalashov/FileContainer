@@ -6,30 +6,30 @@ using JetBrains.Annotations;
 
 namespace FileContainer
 {
-    class FileContainerEntryCollection
+    class PagedContainerEntryCollection
     {
-        [NotNull] readonly Dictionary<string, FileContainerEntry> entries;
-        [NotNull]          int[]                                  pages;
+        [NotNull] readonly Dictionary<string, PagedContainerEntry> entries;
+        [NotNull]          int[]                                   pages;
 
-        internal FileContainerEntryCollection()
+        internal PagedContainerEntryCollection()
         {
-            entries = new Dictionary<string, FileContainerEntry>();
+            entries = new Dictionary<string, PagedContainerEntry>();
             pages   = new int[0];
         }
 
-        internal FileContainerEntryCollection(PageSequence ps)
+        internal PagedContainerEntryCollection(PageSequence ps)
         {
-            entries = FileContainerEntry.Unpack(ps.Data).ToDictionary(p => p.Name, StringComparer.InvariantCultureIgnoreCase);
+            entries = PagedContainerEntry.Unpack(ps.Data).ToDictionary(p => p.Name, StringComparer.InvariantCultureIgnoreCase);
             pages   = ps.Pages;
         }
 
-        internal bool TryGet([NotNull] string key, out FileContainerEntry item) =>
+        internal bool TryGet([NotNull] string key, out PagedContainerEntry item) =>
             entries.TryGetValue(key, out item);
 
-        internal void Add([NotNull] FileContainerEntry entry) =>
+        internal void Add([NotNull] PagedContainerEntry entry) =>
             entries.Add(entry.Name, entry);
 
-        internal bool Remove([NotNull] FileContainerEntry entry)
+        internal bool Remove([NotNull] PagedContainerEntry entry)
         {
             if (!entries.ContainsKey(entry.Name)) return false;
 
@@ -38,7 +38,7 @@ namespace FileContainer
         }
 
         [NotNull]
-        internal IEnumerable<FileContainerEntry> Find(params string[] keys)
+        internal IEnumerable<PagedContainerEntry> Find(params string[] keys)
         {
             var processed = new HashSet<string>(StringComparer.InvariantCultureIgnoreCase);
             foreach (var key in keys)
@@ -64,17 +64,17 @@ namespace FileContainer
         }
 
         [NotNull]
-        internal IEnumerable<FileContainerEntry> All() => entries.Values.ToArray();
+        internal IEnumerable<PagedContainerEntry> All() => entries.Values.ToArray();
 
         /// <summary>
         /// Write entries directory to pages. If pages not enough for new directory - additional pages will allocated.
         /// Also write header and pageAllocator state
         /// </summary>
-        internal void Write([NotNull] Stream stm, [NotNull] FileContainerHeader header, [NotNull] PageAllocator pageAllocator)
+        internal void Write([NotNull] Stream stm, [NotNull] PagedContainerHeader header, [NotNull] PageAllocator pageAllocator)
         {
             var targetPages = pages;
 
-            var buff          = FileContainerEntry.Pack(entries.Values.ToArray());
+            var buff          = PagedContainerEntry.Pack(entries.Values.ToArray());
             var requiredPages = header.GetRequiredPages(buff.Length);
 
             if (requiredPages > targetPages.Length) // новые данные занимают больше страниц?

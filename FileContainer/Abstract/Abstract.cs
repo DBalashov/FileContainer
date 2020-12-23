@@ -8,12 +8,15 @@ namespace FileContainer
 {
     public abstract partial class PagedContainerAbstract : IDisposable
     {
-        [NotNull] internal readonly Stream                       stm;
-        [NotNull] internal readonly FileContainerHeader          header;
-        [NotNull] readonly          PageAllocator                pageAllocator;
-        [NotNull] readonly          FileContainerEntryCollection entries;
+        [NotNull] internal readonly Stream                        stm;
+        [NotNull] internal readonly PagedContainerHeader          header;
+        [NotNull] readonly          PageAllocator                 pageAllocator;
+        [NotNull] readonly          PagedContainerEntryCollection entries;
 
-        public int PageSize => header.PageSize;
+        public int   PageSize   => header.PageSize;
+        public int   TotalPages => pageAllocator.TotalPages;
+        public int   FreePages  => pageAllocator.GetFreePages().Count();
+        public Int64 Length     => stm.Length;
 
         #region constructor / dispose
 
@@ -25,7 +28,7 @@ namespace FileContainer
             {
                 if (stm.Length == 0) // new file
                 {
-                    header = new FileContainerHeader(pageSize);
+                    header = new PagedContainerHeader(pageSize);
                     header.Write(stm);
 
                     pageAllocator = new PageAllocator(header);
@@ -33,13 +36,13 @@ namespace FileContainer
                 }
                 else
                 {
-                    header        = new FileContainerHeader(stm);
+                    header        = new PagedContainerHeader(stm);
                     pageAllocator = new PageAllocator(stm, header);
                 }
 
                 entries = header.DirectoryFirstPage == 0
-                    ? new FileContainerEntryCollection()
-                    : new FileContainerEntryCollection(stm.ReadWithPageSequence(header, header.DirectoryFirstPage));
+                    ? new PagedContainerEntryCollection()
+                    : new PagedContainerEntryCollection(stm.ReadWithPageSequence(header, header.DirectoryFirstPage));
             }
             catch
             {
@@ -71,7 +74,7 @@ namespace FileContainer
 
         /// <summary> Find entries by names. Mask chars * and ? supported in keys </summary>
         [NotNull]
-        public FileContainerEntry[] Find(params string[] keys) =>
+        public PagedContainerEntry[] Find(params string[] keys) =>
             (keys.Any()
                 ? entries.Find(keys)
                 : entries.All()).ToArray();

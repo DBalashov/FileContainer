@@ -8,7 +8,7 @@ namespace FileContainer
     static class ReadExtenders
     {
         /// <summary> Read data and page numbers, starting from 'startFromPage' </summary>
-        internal static PageSequence ReadWithPageSequence([NotNull] this Stream stm, [NotNull] FileContainerHeader header, int startFromPage)
+        internal static PageSequence ReadWithPageSequence([NotNull] this Stream stm, [NotNull] PagedContainerHeader header, int startFromPage)
         {
             using var stmCollector = new MemoryStream();
 
@@ -30,7 +30,7 @@ namespace FileContainer
 
         /// <summary> Read data from pages, starting with entry.FirstPage </summary>
         [NotNull]
-        internal static byte[] ReadEntryPageSequence([NotNull] this Stream stm, [NotNull] FileContainerHeader header, [NotNull] FileContainerEntry entry)
+        internal static byte[] ReadEntryPageSequence([NotNull] this Stream stm, [NotNull] PagedContainerHeader header, [NotNull] PagedContainerEntry entry)
         {
             using var stmCollector = new MemoryStream(entry.Length); // todo replace with byte[]
 
@@ -58,7 +58,7 @@ namespace FileContainer
         /// Last 32 bit contain next page index.
         /// Last page in sequence contain 'next page index' value == 0
         /// </summary>
-        internal static int[] ReadPageSequence([NotNull] this Stream stm, [NotNull] FileContainerHeader header, int startFromPage)
+        internal static int[] ReadPageSequence([NotNull] this Stream stm, [NotNull] PagedContainerHeader header, int startFromPage)
         {
             var pages = new List<int>();
 

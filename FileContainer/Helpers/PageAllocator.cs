@@ -22,9 +22,11 @@ namespace FileContainer
         const int FIRST_PA_PAGE   = 1;
 
         [NotNull] readonly ExpandableBitArray  pageAllocations;
-        [NotNull] readonly FileContainerHeader header;
+        [NotNull] readonly PagedContainerHeader header;
 
-        public PageAllocator([NotNull] FileContainerHeader header)
+        public int TotalPages => pageAllocations.Length;
+
+        public PageAllocator([NotNull] PagedContainerHeader header)
         {
             this.header        = header;
             pageAllocations    = new ExpandableBitArray(2);
@@ -32,7 +34,7 @@ namespace FileContainer
             pageAllocations[1] = true;
         }
 
-        public PageAllocator([NotNull] Stream stm, [NotNull] FileContainerHeader header)
+        public PageAllocator([NotNull] Stream stm, [NotNull] PagedContainerHeader header)
         {
             this.header     = header;
             pageAllocations = new ExpandableBitArray(stm.ReadWithPageSequence(header, FIRST_PA_PAGE).Data);

@@ -15,19 +15,17 @@ namespace Example1
             
             using (var kv = new PersistentContainer(fileName, 32))
             {
-                kv.Put("test1", Enumerable.Range(0, 255).Select(p => (byte) p).ToArray());
-            
-                using (var s = kv.GetStream("test1"))
-                {
-                    var buff = new byte[255];
-            
-                    s.Position = 250;
-            
-                    var x = s.Read(buff, 0, 20);
-                    var y = s.Read(buff, 20, 20);
-            
-                    var s1 = "";
-                }
+                // kv.Put("test1", Enumerable.Range(0, 255).Select(p => (byte) p).ToArray());
+                //
+                // using (var s = kv.GetStream("test1"))
+                // {
+                //     var buff = new byte[255];
+                //
+                //     s.Position = 250;
+                //
+                //     var x = s.Read(buff, 0, 20);
+                //     var y = s.Read(buff, 20, 20);
+                //}
             }
 
             // var fileName = @"E:\" + DateTime.Now.ToString("yyyyMMdd-HHmmss") + ".binn";

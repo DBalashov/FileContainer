@@ -7,7 +7,7 @@ using JetBrains.Annotations;
 
 namespace FileContainer
 {
-    public class FileContainerEntry
+    public class PagedContainerEntry
     {
         static readonly DateTime DT_FROM = new DateTime(2010, 1, 1, 0, 0, 0, DateTimeKind.Utc);
 
@@ -24,7 +24,7 @@ namespace FileContainer
         public int FirstPage { get; internal set; }
         public int LastPage  { get; internal set; }
 
-        internal FileContainerEntry([NotNull] string name, int firstPage, int lastPage, int length, KVEntryFlags flags, DateTime modified)
+        internal PagedContainerEntry([NotNull] string name, int firstPage, int lastPage, int length, KVEntryFlags flags, DateTime modified)
         {
             Name      = name;
             FirstPage = firstPage;
@@ -35,7 +35,7 @@ namespace FileContainer
         }
 
         [NotNull]
-        internal static IEnumerable<FileContainerEntry> Unpack([NotNull] byte[] buff)
+        internal static IEnumerable<PagedContainerEntry> Unpack([NotNull] byte[] buff)
         {
             if (buff.Length <= 0) yield break;
 
@@ -53,12 +53,12 @@ namespace FileContainer
                 var name     = buff.GetString(ref offset);    // 2 byte length + 'length' bytes 
                 var flags    = (KVEntryFlags) buff[offset++]; // 1 byte
 
-                yield return new FileContainerEntry(name, firstPage, lastPage, length, flags, DT_FROM.AddSeconds(modified));
+                yield return new PagedContainerEntry(name, firstPage, lastPage, length, flags, DT_FROM.AddSeconds(modified));
             }
         }
 
         [NotNull]
-        internal static byte[] Pack([NotNull] ICollection<FileContainerEntry> entries)
+        internal static byte[] Pack([NotNull] ICollection<PagedContainerEntry> entries)
         {
             using var stm = new MemoryStream();
             using var bw  = new BinaryWriter(stm, Encoding.Default, true);

@@ -77,7 +77,7 @@ namespace FileContainer
             {
                 var pages = pageAllocator.AllocatePages(requiredPages);
                 stm.WriteIntoPages(header, data, 0, pages);
-                entries.Add(new FileContainerEntry(key, pages.First(), pages.Last(), data.Length, 0, DateTime.UtcNow));
+                entries.Add(new PagedContainerEntry(key, pages.First(), pages.Last(), data.Length, 0, DateTime.UtcNow));
             }
         }
     }
