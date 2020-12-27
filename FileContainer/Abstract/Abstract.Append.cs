@@ -8,30 +8,33 @@ namespace FileContainer
     public abstract partial class PagedContainerAbstract
     {
         /// <summary> Append data to end of existing entry. If entry doesn't exists - create new with passed data </summary>
-        public virtual void Append([NotNull] string key, [NotNull] byte[] data)
+        public virtual PutAppendResult Append([NotNull] string key, [NotNull] byte[] data)
         {
             if (key == null)
                 throw new ArgumentException("Argument can't be null", nameof(data));
-            
+
             if (data == null)
                 throw new ArgumentException("Argument can't be null", nameof(data));
-            
+
             throwIfHasOpenedStream(new[] {key});
             if (key.ContainMask())
                 throw new ArgumentException($"Invalid name: {key}");
 
-            append(key, data);
+            var r = append(key, data);
             entries.Write(stm, header, pageAllocator);
+            return r;
         }
 
         /// <summary> Append data to end of passed entries. Create non-existing entries with passed data. Mask in keys not allowed. </summary>
-        public virtual void Append([NotNull] Dictionary<string, byte[]> keyValues)
+        [NotNull]
+        public virtual Dictionary<string, PutAppendResult> Append([NotNull] Dictionary<string, byte[]> keyValues)
         {
             if (keyValues == null)
                 throw new ArgumentException("Argument can't be null", nameof(keyValues));
 
-            if (!keyValues.Any()) return;
-            
+            if (!keyValues.Any())
+                return new Dictionary<string, PutAppendResult>();
+
             throwIfHasOpenedStream(keyValues.Keys);
             foreach (var item in keyValues)
             {
@@ -40,22 +43,25 @@ namespace FileContainer
 
                 if (item.Value == null || item.Value.Length == 0)
                     throw new ArgumentException($"Argument can't be null or empty {item.Key}", nameof(keyValues));
-                
+
                 if (item.Key.ContainMask())
                     throw new ArgumentException($"Invalid name: {item.Key}");
             }
 
+            var r = new Dictionary<string, PutAppendResult>();
             foreach (var item in keyValues)
-                append(item.Key, item.Value);
+                r.Add(item.Key, append(item.Key, item.Value));
+
             entries.Write(stm, header, pageAllocator);
+            return r;
         }
 
-        void append([NotNull] string key, [NotNull] byte[] data)
+        PutAppendResult append([NotNull] string key, [NotNull] byte[] data)
         {
             if (!entries.TryGet(key, out var existingEntry))
             {
                 put(key, data);
-                return;
+                return PutAppendResult.Created;
             }
 
             var userDataAtLastPage = existingEntry.Length % header.PageUserDataSize; // остаток данных на последней странице
@@ -87,6 +93,7 @@ namespace FileContainer
             existingEntry.Length   += data.Length;
             existingEntry.Modified =  DateTime.UtcNow;
             existingEntry.LastPage =  lastPage;
+            return PutAppendResult.Updated;
         }
     }
 }

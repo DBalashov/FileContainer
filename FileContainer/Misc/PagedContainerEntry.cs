@@ -13,7 +13,7 @@ namespace FileContainer
 
         [NotNull] public string Name { get; }
 
-        /// <summary> в байтах </summary>
+        /// <summary> in bytes </summary>
         public int Length { get; internal set; }
 
         public KVEntryFlags Flags { get; internal set; }
