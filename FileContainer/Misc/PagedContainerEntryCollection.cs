@@ -19,7 +19,11 @@ namespace FileContainer
 
         internal PagedContainerEntryCollection(PageSequence ps)
         {
-            entries = PagedContainerEntry.Unpack(ps.Data).ToDictionary(p => p.Name, StringComparer.InvariantCultureIgnoreCase);
+            List<PagedContainerEntry> l     = new List<PagedContainerEntry>();
+            foreach (var h in PagedContainerEntry.Unpack(ps.Data))
+                l.Add(h);
+                
+            entries = l.ToDictionary(p => p.Name, StringComparer.InvariantCultureIgnoreCase);
             pages   = ps.Pages;
         }
 
@@ -77,12 +81,11 @@ namespace FileContainer
             var buff          = PagedContainerEntry.Pack(entries.Values.ToArray());
             var requiredPages = header.GetRequiredPages(buff.Length);
 
-            if (requiredPages > targetPages.Length) // новые данные занимают больше страниц?
+            if (requiredPages > targetPages.Length) // need to allocate additional pages?
             {
-                // довыделяем требуемое количество страниц
                 targetPages = targetPages.Concat(pageAllocator.AllocatePages(requiredPages - targetPages.Length)).ToArray();
             }
-            else if (requiredPages < targetPages.Length) // новые данные занимают меньше страниц?
+            else if (requiredPages < targetPages.Length) // can free unused pages?
             {
                 var mustBeFreePages = targetPages.Skip(requiredPages).ToArray();
                 targetPages = targetPages.Take(requiredPages).ToArray();
@@ -99,5 +102,9 @@ namespace FileContainer
 
             pages = targetPages;
         }
+        
+#if DEBUG
+        public override string ToString() => $"Pages: {pages.Length}, Entries: {entries.Count}";
+#endif
     }
 }

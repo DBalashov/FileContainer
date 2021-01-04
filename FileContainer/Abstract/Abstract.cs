@@ -57,6 +57,8 @@ namespace FileContainer
         {
             if (isDisposed) return;
 
+            entries.Write(stm, header, pageAllocator);
+            
             isDisposed = true;
             if (stm.CanWrite)
                 stm.Flush();
@@ -94,7 +96,6 @@ namespace FileContainer
                 entries.Remove(entry);
             }
 
-            entries.Write(stm, header, pageAllocator);
             return r.ToArray();
         }
 

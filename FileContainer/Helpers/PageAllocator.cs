@@ -21,7 +21,7 @@ namespace FileContainer
         const int FIRST_DATA_PAGE = 2;
         const int FIRST_PA_PAGE   = 1;
 
-        [NotNull] readonly ExpandableBitArray  pageAllocations;
+        [NotNull] readonly ExpandableBitArray   pageAllocations;
         [NotNull] readonly PagedContainerHeader header;
 
         public int TotalPages => pageAllocations.Length;
@@ -36,21 +36,40 @@ namespace FileContainer
 
         public PageAllocator([NotNull] Stream stm, [NotNull] PagedContainerHeader header)
         {
-            this.header     = header;
-            pageAllocations = new ExpandableBitArray(stm.ReadWithPageSequence(header, FIRST_PA_PAGE).Data);
+            this.header = header;
+
+            var buff          = stm.ReadWithPageSequence(header, FIRST_PA_PAGE).Data;
+            var realByteCount = BitConverter.ToInt32(buff, 0);
+            var newBuffer     = new byte[realByteCount];
+            Buffer.BlockCopy(buff, 4, newBuffer, 0, newBuffer.Length);
+
+            pageAllocations = new ExpandableBitArray(newBuffer);
+        }
+
+        [NotNull]
+        byte[] getPageAllocatorBytes()
+        {
+            var buff      = pageAllocations.GetBytes();
+            var newBuffer = new byte[buff.Length + 4];
+            Array.Copy(BitConverter.GetBytes(buff.Length), 0, newBuffer, 0, 4);
+            Array.Copy(buff, 0, newBuffer, 4, buff.Length);
+            return newBuffer;
         }
 
         /// <summary> записывает содержимое PA в stm, при необходимости - перед этим выделяя страницы и для себя тоже </summary>
         public void Write([NotNull] Stream stm)
         {
-            var buff    = pageAllocations.GetBytes();
-            var inPages = header.GetRequiredPages(buff.Length);
+            var buff           = getPageAllocatorBytes();
+            var allocatedPages = stm.ReadPageSequence(header, FIRST_PA_PAGE).ToList();
+            var requiredPages  = header.GetRequiredPages(buff.Length);
+            while (requiredPages > allocatedPages.Count)
+            {
+                allocatedPages.AddRange(AllocatePages(requiredPages - allocatedPages.Count));
+                buff          = getPageAllocatorBytes(); // serialize to buffer and check again - need to more pages?
+                requiredPages = header.GetRequiredPages(buff.Length);
+            }
 
-            var allocatedPages = stm.ReadPageSequence(header, FIRST_PA_PAGE);
-            if (inPages < allocatedPages.Length)
-                allocatedPages = allocatedPages.Concat(AllocatePages(inPages - allocatedPages.Length)).ToArray();
-
-            stm.WriteIntoPages(header, buff, 0, allocatedPages);
+            stm.WriteIntoPages(header, buff, 0, allocatedPages.ToArray());
         }
 
         #region Allocate / Free
@@ -64,16 +83,17 @@ namespace FileContainer
             var r       = new int[count];
             var counter = 0;
 
-            foreach (var pageIndex in pageAllocations.GetBits(false).Skip(FIRST_DATA_PAGE).Take(count))
+            foreach (var pageIndex in pageAllocations.GetBits(false).Take(count))
                 r[counter++] = pageIndex;
 
             var additionalPages = count - counter;
             if (additionalPages > 0) // запрашиваемых страниц больше, чем есть в pageAllocations -> увеличиваем его емкость на эту разницу * PAGE_ALLOC_MULTIPLIER
             {
-                var startFrom = pageAllocations.Length;
                 pageAllocations.ResizeTo(pageAllocations.Length + additionalPages * PAGE_ALLOC_MULTIPLIER);
-                for (var i = 0; i < additionalPages; i++)
-                    r[counter++] = startFrom + i;
+
+                counter = 0;
+                foreach (var pageIndex in pageAllocations.GetBits(false).Take(count))
+                    r[counter++] = pageIndex;
             }
 
             foreach (var page in r)

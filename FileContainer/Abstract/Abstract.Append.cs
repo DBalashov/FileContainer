@@ -21,7 +21,6 @@ namespace FileContainer
                 throw new ArgumentException($"Invalid name: {key}");
 
             var r = append(key, data);
-            entries.Write(stm, header, pageAllocator);
             return r;
         }
 
@@ -52,7 +51,6 @@ namespace FileContainer
             foreach (var item in keyValues)
                 r.Add(item.Key, append(item.Key, item.Value));
 
-            entries.Write(stm, header, pageAllocator);
             return r;
         }
 

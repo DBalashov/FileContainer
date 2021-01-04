@@ -22,19 +22,23 @@ namespace FileContainer
             var nameLength = BitConverter.ToUInt16(buff, offset);
             offset += 2;
 
-            var r = Encoding.UTF8.GetString(buff, offset, nameLength);
-            offset += nameLength;
-            return r;
+            if (nameLength > 0)
+            {
+                var r = Encoding.UTF8.GetString(buff, offset, nameLength);
+                offset += nameLength;
+                return r;
+            }
+
+            return "";
         }
 
         [NotNull]
         internal static BinaryWriter PutString([NotNull] this BinaryWriter bw, string value)
         {
-            bw.Write((ushort) value.Length);
-
             var b = Encoding.UTF8.GetBytes(value);
-            bw.Write(b, 0, b.Length);
-
+            bw.Write((ushort) b.Length);
+            if (b.Length > 0)
+                bw.Write(b, 0, b.Length);
             return bw;
         }
 

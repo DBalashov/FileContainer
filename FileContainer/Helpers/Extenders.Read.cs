@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using JetBrains.Annotations;
 
@@ -34,10 +35,10 @@ namespace FileContainer
         {
             using var stmCollector = new MemoryStream(entry.Length); // todo replace with byte[]
 
-            var buff         = new byte[header.PageSize];
-            var remainLength = entry.Length;
-
+            var remainLength     = entry.Length;
             var currentPageIndex = entry.FirstPage;
+            var buff             = new byte[header.PageSize];
+
             while (currentPageIndex > 0)
             {
                 stm.Position = currentPageIndex * header.PageSize;
@@ -50,7 +51,8 @@ namespace FileContainer
                 currentPageIndex = BitConverter.ToInt32(buff, header.PageUserDataSize);
             }
 
-            return stmCollector.ToArray();
+            var r = stmCollector.ToArray();
+            return r;
         }
 
         /// <summary>
@@ -62,21 +64,22 @@ namespace FileContainer
         {
             var pages = new List<int>();
 
-            var buff = new byte[4];
-            while (startFromPage > 0)
+            var buff             = new byte[4];
+            var currentPageIndex = startFromPage;
+            while (currentPageIndex > 0)
             {
-                pages.Add(startFromPage);
+                pages.Add(currentPageIndex);
 
-                stm.Position = startFromPage * header.PageSize + header.PageUserDataSize;
+                stm.Position = currentPageIndex * header.PageSize + header.PageUserDataSize;
                 stm.Read(buff, 0, 4);
 
-                startFromPage = BitConverter.ToInt32(buff, 0);
+                currentPageIndex = BitConverter.ToInt32(buff, 0);
             }
 
             return pages.ToArray();
         }
     }
-    
+
     readonly struct PageSequence
     {
         [NotNull] internal readonly byte[] Data;
@@ -87,5 +90,10 @@ namespace FileContainer
             Data  = data;
             Pages = pages;
         }
+
+#if DEBUG
+        public override string ToString() => $"{Data.Length} bytes, {Pages.Length} pages";
+
+#endif
     }
 }

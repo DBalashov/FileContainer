@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using JetBrains.Annotations;
 
@@ -21,7 +22,6 @@ namespace FileContainer
                 throw new ArgumentException($"Invalid name: {key}");
 
             var r = put(key, data);
-            entries.Write(stm, header, pageAllocator);
             return r;
         }
 
@@ -45,8 +45,7 @@ namespace FileContainer
             var r = new Dictionary<string, PutAppendResult>();
             foreach (var item in keyValues)
                 r.Add(item.Key, put(item.Key, item.Value));
-
-            entries.Write(stm, header, pageAllocator);
+            
             return r;
         }
 
@@ -57,25 +56,27 @@ namespace FileContainer
             if (entries.TryGet(key, out var existingEntry))
             {
                 var allocatedPages = stm.ReadPageSequence(header, existingEntry.FirstPage);
-
-                if (allocatedPages.Length < requiredPages) // new data require additional pages?
+                if (requiredPages > allocatedPages.Length) // new data require additional pages?
                 {
                     // allocate require page count
-                    var newPages = pageAllocator.AllocatePages(requiredPages - allocatedPages.Length);
-                    allocatedPages = allocatedPages.Concat(newPages).ToArray(); // append pages to current list
+                    var newAllocatedPages = pageAllocator.AllocatePages(requiredPages - allocatedPages.Length);
+                    var newPages          = allocatedPages.Concat(newAllocatedPages).ToArray(); // append pages to current list
+                    allocatedPages = newPages;
                 }
                 else if (requiredPages < allocatedPages.Length) // new data less than exists?
                 {
                     var mustBeFreePages = allocatedPages.Skip(requiredPages).ToArray(); // skip occupated pages 
-                    allocatedPages = allocatedPages.Take(requiredPages).ToArray();
+                    var newPages        = allocatedPages.Take(requiredPages).ToArray();
 
                     pageAllocator.FreePages(mustBeFreePages);
+                    allocatedPages = newPages;
                 }
 
                 stm.WriteIntoPages(header, data, 0, allocatedPages);
-                existingEntry.LastPage = allocatedPages.Last();
-                existingEntry.Modified = DateTime.UtcNow;
-                existingEntry.Length   = data.Length;
+                existingEntry.FirstPage = allocatedPages.First();
+                existingEntry.LastPage  = allocatedPages.Last();
+                existingEntry.Modified  = DateTime.UtcNow;
+                existingEntry.Length    = data.Length;
                 return PutAppendResult.Updated;
             }
             else

@@ -1,13 +1,14 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.IO;
 using System.Runtime.CompilerServices;
 using System.Text;
 using JetBrains.Annotations;
 
 namespace FileContainer
 {
-    sealed class ExpandableBitArray
+    public sealed class ExpandableBitArray
     {
         const int  BPV     = sizeof(uint) * 8;
         const uint ALL_ON  = 0xFFFFFFFF;
@@ -15,9 +16,9 @@ namespace FileContainer
 
         [NotNull] uint[] values;
 
-        internal int Length => values.Length * BPV;
+        public int Length => values.Length * BPV;
 
-        internal ExpandableBitArray(int minimumBits)
+        public ExpandableBitArray(int minimumBits)
         {
             if (minimumBits < 1)
                 throw new ArgumentOutOfRangeException(nameof(minimumBits), minimumBits, "parameter must be >=1");
@@ -26,7 +27,7 @@ namespace FileContainer
         }
 
         /// <summary> create bit array from bytes. If bytes unaligned to 4 bytes (32 bits) - array will expanded to nearest 4 byte length with zero bits </summary>
-        internal ExpandableBitArray([NotNull] byte[] bytes)
+        public ExpandableBitArray([NotNull] byte[] bytes)
         {
             var byteInValue = BPV / 8;
             if (bytes.Length % byteInValue != 0)
@@ -154,8 +155,8 @@ namespace FileContainer
             var valueIndex = bitIndex / BPV;
             var mask       = 1 << (bitIndex % BPV);
             if (toState)
-                values[valueIndex]        |= (uint) mask;
-            else values[valueIndex / BPV] &= (uint) ~mask;
+                values[valueIndex]  |= (uint) mask;
+            else values[valueIndex] &= (uint) ~mask;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -168,7 +169,9 @@ namespace FileContainer
         [ExcludeFromCodeCoverage]
         public override string ToString()
         {
-            var sb      = new StringBuilder();
+            var sb = new StringBuilder();
+            sb.AppendFormat("Bits: {0}\n", values.Length * BPV);
+
             int counter = 0;
             foreach (var value in values)
             {
