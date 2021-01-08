@@ -11,6 +11,8 @@ namespace FileContainer
         [NotNull] readonly Dictionary<string, PagedContainerEntry> entries;
         [NotNull]          int[]                                   pages;
 
+        public bool Modified { get; private set; }
+
         internal PagedContainerEntryCollection()
         {
             entries = new Dictionary<string, PagedContainerEntry>();
@@ -19,30 +21,41 @@ namespace FileContainer
 
         internal PagedContainerEntryCollection(PageSequence ps)
         {
-            List<PagedContainerEntry> l     = new List<PagedContainerEntry>();
-            foreach (var h in PagedContainerEntry.Unpack(ps.Data))
-                l.Add(h);
-                
-            entries = l.ToDictionary(p => p.Name, StringComparer.InvariantCultureIgnoreCase);
-            pages   = ps.Pages;
+            entries  = PagedContainerEntry.Unpack(ps.Data).ToDictionary(p => p.Name, StringComparer.InvariantCultureIgnoreCase);
+            pages    = ps.Pages;
+            Modified = false;
         }
 
-        internal bool TryGet([NotNull] string key, out PagedContainerEntry item) =>
+        public bool TryGet([NotNull] string key, out PagedContainerEntry item) =>
             entries.TryGetValue(key, out item);
 
-        internal void Add([NotNull] PagedContainerEntry entry) =>
+        public void Add([NotNull] PagedContainerEntry entry)
+        {
             entries.Add(entry.Name, entry);
+            Modified = true;
+        }
 
-        internal bool Remove([NotNull] PagedContainerEntry entry)
+        public bool Remove([NotNull] PagedContainerEntry entry)
         {
             if (!entries.ContainsKey(entry.Name)) return false;
 
             entries.Remove(entry.Name);
+            Modified = true;
             return true;
         }
 
+        public void Update([NotNull] PagedContainerEntry entry, int pageFirst, int pageLast, int dataLength)
+        {
+            entry.FirstPage = pageFirst;
+            entry.LastPage  = pageLast;
+            entry.Length    = dataLength;
+            entry.Modified  = DateTime.UtcNow;
+
+            Modified = true;
+        }
+
         [NotNull]
-        internal IEnumerable<PagedContainerEntry> Find(params string[] keys)
+        public IEnumerable<PagedContainerEntry> Find(params string[] keys)
         {
             var processed = new HashSet<string>(StringComparer.InvariantCultureIgnoreCase);
             foreach (var key in keys)
@@ -68,13 +81,13 @@ namespace FileContainer
         }
 
         [NotNull]
-        internal IEnumerable<PagedContainerEntry> All() => entries.Values.ToArray();
+        public IEnumerable<PagedContainerEntry> All() => entries.Values.ToArray();
 
         /// <summary>
         /// Write entries directory to pages. If pages not enough for new directory - additional pages will allocated.
         /// Also write header and pageAllocator state
         /// </summary>
-        internal void Write([NotNull] Stream stm, [NotNull] PagedContainerHeader header, [NotNull] PageAllocator pageAllocator)
+        public void Write([NotNull] Stream stm, [NotNull] PagedContainerHeader header, [NotNull] PageAllocator pageAllocator)
         {
             var targetPages = pages;
 
@@ -102,7 +115,7 @@ namespace FileContainer
 
             pages = targetPages;
         }
-        
+
 #if DEBUG
         public override string ToString() => $"Pages: {pages.Length}, Entries: {entries.Count}";
 #endif

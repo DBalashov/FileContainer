@@ -62,11 +62,11 @@ namespace FileContainer
                 return PutAppendResult.Created;
             }
 
-            var userDataAtLastPage = existingEntry.Length % header.PageUserDataSize; // остаток данных на последней странице
-            stm.Position = (existingEntry.LastPage * header.PageSize) + userDataAtLastPage;
+            var userDataAtLastPage = existingEntry.Length % header.PageUserDataSize; // rest of data on last page
+            stm.Position = existingEntry.LastPage * header.PageSize + userDataAtLastPage;
 
             int lastPage;
-            if (header.PageUserDataSize - userDataAtLastPage >= data.Length) // дописываемые данные укладываются на последнюю страницу без выделений новых страниц?
+            if (header.PageUserDataSize - userDataAtLastPage >= data.Length) // is there enough free space on the last page for new data (no page allocation)?
             {
                 stm.Write(data, 0, data.Length);
                 lastPage = existingEntry.LastPage;
@@ -74,23 +74,21 @@ namespace FileContainer
             else
             {
                 var lengthToWriteOnExistingLastPage = header.PageUserDataSize - userDataAtLastPage;
-                stm.Write(data, 0, lengthToWriteOnExistingLastPage); // голову данных пишем на последнюю страницу в свободное место 
+                stm.Write(data, 0, lengthToWriteOnExistingLastPage); // head of data write to free space on last page 
 
                 var remainDataLength = data.Length - lengthToWriteOnExistingLastPage;
                 if (remainDataLength > 0)
                 {
                     var additionalPages = pageAllocator.AllocatePages(header.GetRequiredPages(remainDataLength));
 
-                    stm.Write(BitConverter.GetBytes(additionalPages.First()), 0, 4); // ссылка на первую новую выделенную страницу
+                    stm.Write(BitConverter.GetBytes(additionalPages.First()), 0, 4); // link on first new allocated page
                     stm.WriteIntoPages(header, data, lengthToWriteOnExistingLastPage, additionalPages);
                     lastPage = additionalPages.Last();
                 }
                 else lastPage = existingEntry.LastPage;
             }
 
-            existingEntry.Length   += data.Length;
-            existingEntry.Modified =  DateTime.UtcNow;
-            existingEntry.LastPage =  lastPage;
+            entries.Update(existingEntry, existingEntry.FirstPage, lastPage, existingEntry.Length + data.Length);
             return PutAppendResult.Updated;
         }
     }

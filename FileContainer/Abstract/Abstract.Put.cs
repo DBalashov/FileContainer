@@ -63,7 +63,7 @@ namespace FileContainer
                     var newPages          = allocatedPages.Concat(newAllocatedPages).ToArray(); // append pages to current list
                     allocatedPages = newPages;
                 }
-                else if (requiredPages < allocatedPages.Length) // new data less than exists?
+                else if (requiredPages < allocatedPages.Length) // new data length < than exists?
                 {
                     var mustBeFreePages = allocatedPages.Skip(requiredPages).ToArray(); // skip occupated pages 
                     var newPages        = allocatedPages.Take(requiredPages).ToArray();
@@ -73,10 +73,7 @@ namespace FileContainer
                 }
 
                 stm.WriteIntoPages(header, data, 0, allocatedPages);
-                existingEntry.FirstPage = allocatedPages.First();
-                existingEntry.LastPage  = allocatedPages.Last();
-                existingEntry.Modified  = DateTime.UtcNow;
-                existingEntry.Length    = data.Length;
+                entries.Update(existingEntry, allocatedPages.First(), allocatedPages.Last(), data.Length);
                 return PutAppendResult.Updated;
             }
             else

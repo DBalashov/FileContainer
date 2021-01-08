@@ -56,12 +56,13 @@ namespace FileContainer
         public void Dispose()
         {
             if (isDisposed) return;
-
-            entries.Write(stm, header, pageAllocator);
-            
             isDisposed = true;
-            if (stm.CanWrite)
+
+            if (stm.CanWrite && entries.Modified)
+            {
+                entries.Write(stm, header, pageAllocator);
                 stm.Flush();
+            }
 
             DisposeStream();
         }
