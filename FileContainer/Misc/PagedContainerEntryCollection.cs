@@ -26,8 +26,10 @@ namespace FileContainer
             Modified = false;
         }
 
-        public bool TryGet([NotNull] string key, out PagedContainerEntry item) =>
-            entries.TryGetValue(key, out item);
+        public bool TryGet([NotNull] string key, out PagedContainerEntry item) => 
+            string.IsNullOrEmpty(key) 
+                ? throw new ArgumentException("Argument can't be null or empty", nameof(key)) 
+                : entries.TryGetValue(key, out item);
 
         public void Add([NotNull] PagedContainerEntry entry)
         {
@@ -54,10 +56,16 @@ namespace FileContainer
             Modified = true;
         }
 
+        /// <exception cref="ArgumentException"></exception>
         [NotNull]
         public IEnumerable<PagedContainerEntry> Find(params string[] keys)
         {
             var processed = new HashSet<string>(StringComparer.InvariantCultureIgnoreCase);
+            
+            foreach (var key in keys)
+                if (string.IsNullOrEmpty(key))
+                    throw new ArgumentException("Argument can't be null or empty", nameof(keys));
+            
             foreach (var key in keys)
             {
                 if (key.ContainMask())

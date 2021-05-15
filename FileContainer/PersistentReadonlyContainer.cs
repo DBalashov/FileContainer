@@ -10,7 +10,7 @@ namespace FileContainer
     {
         public PersistentReadonlyContainer([NotNull] string fileName, int pageSize = 4096) :
             base(File.Exists(fileName)
-                     ? (Stream) new FileStream(fileName, FileMode.Open, FileAccess.Read, FileShare.Read, pageSize * 2)
+                     ? new FileStream(fileName, FileMode.Open, FileAccess.Read, FileShare.Read, pageSize * 2)
                      : new MemoryStream(), pageSize)
         {
         }

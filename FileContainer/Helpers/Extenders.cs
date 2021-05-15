@@ -11,6 +11,8 @@ namespace FileContainer
 {
     static class Extenders
     {
+        static readonly Encoding defaultEncoding = Encoding.UTF8;
+        
         /// <summary>
         /// Read UTF-8 string from buff starting with offset
         /// string must be stored as [ushort length][utf-8 bytes]
@@ -24,7 +26,7 @@ namespace FileContainer
 
             if (nameLength > 0)
             {
-                var r = Encoding.UTF8.GetString(buff, offset, nameLength);
+                var r = defaultEncoding.GetString(buff, offset, nameLength);
                 offset += nameLength;
                 return r;
             }
@@ -35,7 +37,7 @@ namespace FileContainer
         [NotNull]
         internal static BinaryWriter PutString([NotNull] this BinaryWriter bw, string value)
         {
-            var b = Encoding.UTF8.GetBytes(value);
+            var b = defaultEncoding.GetBytes(value);
             bw.Write((ushort) b.Length);
             if (b.Length > 0)
                 bw.Write(b, 0, b.Length);

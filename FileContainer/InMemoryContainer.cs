@@ -17,7 +17,7 @@ namespace FileContainer
 
         protected override void DisposeStream()
         {
-            if (!externalMemoryStream) // если стрим был создан в KVInMemoryStore - убиваем его вместе со всем остальным, иначе не трогаем т.к. он пришёл снаружи
+            if (!externalMemoryStream) // if the own stream - disposing, otherwise no action due to the external stream
                 base.DisposeStream();
         }
     }

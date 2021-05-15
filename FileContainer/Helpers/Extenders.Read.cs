@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using JetBrains.Annotations;
 
@@ -51,8 +50,7 @@ namespace FileContainer
                 currentPageIndex = BitConverter.ToInt32(buff, header.PageUserDataSize);
             }
 
-            var r = stmCollector.ToArray();
-            return r;
+            return stmCollector.ToArray();
         }
 
         /// <summary>
@@ -60,6 +58,7 @@ namespace FileContainer
         /// Last 32 bit contain next page index.
         /// Last page in sequence contain 'next page index' value == 0
         /// </summary>
+        [NotNull]
         internal static int[] ReadPageSequence([NotNull] this Stream stm, [NotNull] PagedContainerHeader header, int startFromPage)
         {
             var pages = new List<int>();
@@ -78,22 +77,5 @@ namespace FileContainer
 
             return pages.ToArray();
         }
-    }
-
-    readonly struct PageSequence
-    {
-        [NotNull] internal readonly byte[] Data;
-        [NotNull] internal readonly int[]  Pages;
-
-        internal PageSequence([NotNull] byte[] data, [NotNull] int[] pages)
-        {
-            Data  = data;
-            Pages = pages;
-        }
-
-#if DEBUG
-        public override string ToString() => $"{Data.Length} bytes, {Pages.Length} pages";
-
-#endif
     }
 }

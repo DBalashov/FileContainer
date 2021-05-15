@@ -7,6 +7,8 @@ namespace FileContainer
 {
     public abstract partial class PagedContainerAbstract
     {
+        #region byte[]
+
         /// <summary> Append data to end of existing entry. If entry doesn't exists - create new with passed data </summary>
         public virtual PutAppendResult Append([NotNull] string key, [NotNull] byte[] data)
         {
@@ -21,6 +23,10 @@ namespace FileContainer
                 throw new ArgumentException($"Invalid name: {key}");
 
             var r = append(key, data);
+
+            if (Flags.HasFlag(PersistentContainerFlags.WriteDirImmediately))
+                WriteHeaders();
+
             return r;
         }
 
@@ -51,8 +57,40 @@ namespace FileContainer
             foreach (var item in keyValues)
                 r.Add(item.Key, append(item.Key, item.Value));
 
+            if (Flags.HasFlag(PersistentContainerFlags.WriteDirImmediately))
+                WriteHeaders();
+
             return r;
         }
+
+        #endregion
+
+        #region string
+
+        public virtual PutAppendResult Append([NotNull] string key, [NotNull] string data)
+        {
+            if (string.IsNullOrEmpty(data))
+                throw new ArgumentException("Argument can't be null or empty", nameof(data));
+
+            return Append(key, defaultEncoding.GetBytes(data));
+        }
+
+        [NotNull]
+        public virtual Dictionary<string, PutAppendResult> Append([NotNull] Dictionary<string, string> keyValues)
+        {
+            foreach (var item in keyValues)
+            {
+                if (string.IsNullOrEmpty(item.Key))
+                    throw new ArgumentException("Argument can't be null or empty", nameof(keyValues));
+
+                if (string.IsNullOrEmpty(item.Value))
+                    throw new ArgumentException($"Argument can't be null or empty: {item.Key}", nameof(keyValues));
+            }
+
+            return Append(keyValues.ToDictionary(p => p.Key, p => defaultEncoding.GetBytes(p.Value), StringComparer.InvariantCultureIgnoreCase));
+        }
+        
+        #endregion
 
         PutAppendResult append([NotNull] string key, [NotNull] byte[] data)
         {

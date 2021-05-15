@@ -9,35 +9,58 @@ namespace Benchmark
 {
     class Program
     {
+        // https://binaries.sonarsource.com/CommercialDistribution/sonarqube-developer/sonarqube-developer-8.6.0.39681.zip
+        static readonly string sourceFileName  = @"D:\sonarqube-developer-8.6.0.39681.zip";
+        static readonly string targetDirectory = @"E:\";
+
+        static readonly int[] pageSizes  = {128, 256, 512, 1024, 2048, 4096, 8192, 16384, 32768, 65536};
+        static readonly int[] batchSizes = {8, 16, 32, 64, 128};
+
         static void Main(string[] args)
         {
-            // https://binaries.sonarsource.com/CommercialDistribution/sonarqube-developer/sonarqube-developer-8.6.0.39681.zip
-            var sourceFileName  = @"D:\Downloads\sonarqube-developer-8.6.0.39681.zip";
-            var targetDirectory = @"E:\";
-            var pageSizes       = new[] {128, 256, 512, 1024, 2048, 4096, 8192, 16384, 32768, 65536};
-            var batchSizes      = new[] {8, 16, 32, 64, 128};
+            var extractedFiles = extractFile();
+            testSingleWrites(extractedFiles);
+            foreach (var batchSize in batchSizes)
+                testBatchWrites(extractedFiles, batchSize);
 
-            Dictionary<string, byte[]> extractedFiles;
+            foreach (var pageSize in pageSizes)
+            {
+                var fileName = getFileNameByPageSize(pageSize);
+                if (File.Exists(fileName))
+                    File.Delete(fileName);
+            }
+        }
 
+        #region extractFile
+
+        static Dictionary<string, byte[]> extractFile()
+        {
             Console.WriteLine("Extracting");
-            using (var zipFile = Ionic.Zip.ZipFile.Read(sourceFileName))
-                extractedFiles = zipFile.Entries
-                                        .Where(p => !p.IsDirectory)
-                                        .ToDictionary(p => p.FileName,
-                                                      p =>
-                                                      {
-                                                          using var stm = new MemoryStream();
-                                                          p.Extract(stm);
-                                                          return stm.ToArray();
-                                                      });
+            using var zipFile = Ionic.Zip.ZipFile.Read(sourceFileName);
+            return zipFile.Entries
+                          .Where(p => !p.IsDirectory)
+                          .ToDictionary(p => p.FileName,
+                                        p =>
+                                        {
+                                            using var stm = new MemoryStream();
+                                            p.Extract(stm);
+                                            return stm.ToArray();
+                                        });
+        }
 
+        #endregion
+
+        #region test - single writes
+
+        static void testSingleWrites(Dictionary<string, byte[]> extractedFiles)
+        {
             var totalLengths = extractedFiles.Sum(p => p.Value.Length);
 
             Console.WriteLine("Single requests - write");
             Console.WriteLine("Page\tms\tMB\tMB/sec\tLost(%)");
             foreach (var pageSize in pageSizes)
             {
-                var targetFileName = Path.Combine(targetDirectory, pageSize.ToString().PadLeft(5, '_') + ".binn");
+                var targetFileName = getFileNameByPageSize(pageSize);
                 if (File.Exists(targetFileName))
                     File.Delete(targetFileName);
 
@@ -56,34 +79,38 @@ namespace Benchmark
                                   lengthInMB / (sw.ElapsedMilliseconds / 1000.0),
                                   ((targetFileLength - totalLengths) / (double) targetFileLength) * 100);
             }
+        }
 
-            foreach (var batchSize in batchSizes)
+        #endregion
+
+        #region test - batch writes
+
+        static void testBatchWrites(Dictionary<string, byte[]> extractedFiles, int batchSize)
+        {
+            Console.WriteLine();
+            Console.WriteLine("Batch requests - batch: {0}", batchSize);
+            Console.WriteLine("Page\tms\tMB/sec");
+
+            var items = makeBatches(extractedFiles, batchSize);
+            foreach (var pageSize in pageSizes)
             {
-                Console.WriteLine();
-                Console.WriteLine("Batch requests - batch: {0}", batchSize);
-                Console.WriteLine("Page\tms\tMB/sec");
+                var targetFileName = getFileNameByPageSize(pageSize);
+                if (File.Exists(targetFileName))
+                    File.Delete(targetFileName);
 
-                var items = makeBatches(extractedFiles, batchSize);
-                foreach (var pageSize in pageSizes)
-                {
-                    var targetFileName = Path.Combine(targetDirectory, pageSize.ToString().PadLeft(5, '_') + ".binn");
-                    if (File.Exists(targetFileName))
-                        File.Delete(targetFileName);
+                var sw = Stopwatch.StartNew();
+                using (var container = new PersistentContainer(targetFileName, pageSize))
+                    foreach (var item in items)
+                        container.Put(item);
 
-                    var sw = Stopwatch.StartNew();
-                    using (var container = new PersistentContainer(targetFileName, pageSize))
-                        foreach (var item in items)
-                            container.Put(item);
+                var targetFileLength = new FileInfo(targetFileName).Length;
 
-                    var targetFileLength = new FileInfo(targetFileName).Length;
+                sw.Stop();
 
-                    sw.Stop();
-
-                    var lengthInMB = targetFileLength / 1048576.0;
-                    Console.WriteLine("{0,5}\t{1}\t{2:F1}",
-                                      pageSize, sw.ElapsedMilliseconds,
-                                      lengthInMB / (sw.ElapsedMilliseconds / 1000.0));
-                }
+                var lengthInMB = targetFileLength / 1048576.0;
+                Console.WriteLine("{0,5}\t{1}\t{2:F1}",
+                                  pageSize, sw.ElapsedMilliseconds,
+                                  lengthInMB / (sw.ElapsedMilliseconds / 1000.0));
             }
         }
 
@@ -99,5 +126,10 @@ namespace Benchmark
 
             return r;
         }
+
+        #endregion
+
+        static string getFileNameByPageSize(int pageSize) =>
+            Path.Combine(targetDirectory, pageSize.ToString().PadLeft(5, '_') + ".binn");
     }
 }

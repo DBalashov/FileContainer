@@ -123,7 +123,7 @@ namespace FileContainer
 
         #endregion
 
-        [ExcludeFromCodeCoverage] // не используется в данный момент
+        [ExcludeFromCodeCoverage] // not used now
         public IEnumerable<int> GetFreePages()
         {
             for (var i = FIRST_DATA_PAGE; i < pageAllocations.Length; i++)

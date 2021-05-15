@@ -10,6 +10,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Benchmark", "Benchmark\Benc
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FCLI", "FCLI\FCLI.csproj", "{9ADC823C-E80B-4817-AC02-A805AAA7A538}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Example2", "Example2\Example2.csproj", "{687E789F-19A9-41F4-988F-6D3BB7FA65D1}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -36,5 +38,9 @@ Global
 		{9ADC823C-E80B-4817-AC02-A805AAA7A538}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{9ADC823C-E80B-4817-AC02-A805AAA7A538}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{9ADC823C-E80B-4817-AC02-A805AAA7A538}.Release|Any CPU.Build.0 = Release|Any CPU
+		{687E789F-19A9-41F4-988F-6D3BB7FA65D1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{687E789F-19A9-41F4-988F-6D3BB7FA65D1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{687E789F-19A9-41F4-988F-6D3BB7FA65D1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{687E789F-19A9-41F4-988F-6D3BB7FA65D1}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

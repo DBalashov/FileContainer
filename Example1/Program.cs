@@ -1,6 +1,5 @@
 ﻿using System;
 using System.IO;
-using System.Linq;
 using FileContainer;
 
 namespace Example1
@@ -9,50 +8,35 @@ namespace Example1
     {
         static void Main(string[] args)
         {
-            var fileName = @"E:\test1.binn";
+            var fileName = Path.Combine(Path.GetTempPath(), "test.container");
             if (File.Exists(fileName))
                 File.Delete(fileName);
-            
-            using (var kv = new PersistentContainer(fileName, 32))
+
+            using (var pc = new PersistentContainer(fileName, 256))
             {
-                // kv.Put("test1", Enumerable.Range(0, 255).Select(p => (byte) p).ToArray());
-                //
-                // using (var s = kv.GetStream("test1"))
-                // {
-                //     var buff = new byte[255];
-                //
-                //     s.Position = 250;
-                //
-                //     var x = s.Read(buff, 0, 20);
-                //     var y = s.Read(buff, 20, 20);
-                //}
+                pc.Put("item1", "Hello");
+                pc.Put("item2", "User");
+                
+                // overwrite item1:
+                pc.Put("item1", "Bye!");
+
+                pc.Append("item1", "See you later!");
+
+                pc.Delete("item2");
+
+                pc.Put("item3", "another item");
             }
 
-            // var fileName = @"E:\" + DateTime.Now.ToString("yyyyMMdd-HHmmss") + ".binn";
-            //
-            // if (File.Exists(fileName))
-            //     File.Delete(fileName);
-            //
-            // var dirName = @"D:\1";
-            // var source = Directory.EnumerateDirectories(dirName, "*.*")
-            //                       .Select(p => Directory.EnumerateFiles(p, "*.*")
-            //                                             .ToDictionary(file => file.Substring(dirName.Length + 1).Replace('\\', '/'),
-            //                                                           File.ReadAllBytes))
-            //                       .ToArray();
-            //
-            // using (var kv = new KVFileStore(fileName))
-            // {
-            //     var sw = Stopwatch.StartNew();
-            //     foreach (var part in source)
-            //         kv.Put(part);
-            //
-            //     Console.WriteLine("Write: " + sw.ElapsedMilliseconds + " ms");
-            // }
-
-            //var eba           = new ExpandableBitArray(15);
-            //eba[12] = eba[14] = eba[2] = true;
-            //eba[31] = true;
-            //eba[32] = true;
+            using (var pc = new PersistentContainer(fileName, 256))
+            {
+                var entries = pc.Find();
+                foreach (var entry in entries)
+                    Console.WriteLine(entry);
+                
+                Console.WriteLine();
+                foreach (var entry in entries)
+                    Console.WriteLine("{0}: {1}", entry.Name, pc.GetString(entry.Name));
+            }
         }
     }
 }

@@ -7,14 +7,15 @@ namespace FileContainer
 {
     public abstract partial class PagedContainerAbstract
     {
-        readonly Dictionary<string, EntryReadonlyStream> attachedStreams = new Dictionary<string, EntryReadonlyStream>(StringComparer.InvariantCultureIgnoreCase);
+        readonly Dictionary<string, EntryReadonlyStream> attachedStreams = new(StringComparer.InvariantCultureIgnoreCase);
 
         /// <summary>
-        /// Create stream for reading entry with key
-        /// Stream was attached ro PagedContainer and will detached at stream disposing
-        /// Only one opened stream per key allowed
+        /// Create stream for reading entry with key.
+        /// Stream was attached to PagedContainer and will detached at stream disposing.
+        /// Only one opened stream per key allowed.
+        /// Mask allowed, but only first founded item will opened. 
         /// 
-        /// Value of entry can't be changed if existing opened stream for this key (exception occured at Append/Put/Delete operations) 
+        /// Value of entry can't be changed and exception will throwed (Append/Delete/Put operations) until existing stream was closed. 
         /// </summary>
         [CanBeNull]
         public EntryReadonlyStream GetStream([NotNull] string key)
@@ -33,7 +34,7 @@ namespace FileContainer
 
         void throwIfHasOpenedStream([NotNull] IEnumerable<string> keys)
         {
-            foreach(var key in keys)
+            foreach (var key in keys)
                 if (attachedStreams.ContainsKey(key))
                     throw new InvalidOperationException($"Modify operation while attached ReadOnlyStream: {key}");
         }

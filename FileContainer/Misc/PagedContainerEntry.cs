@@ -9,7 +9,7 @@ namespace FileContainer
 {
     public class PagedContainerEntry
     {
-        static readonly DateTime DT_FROM = new DateTime(2010, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+        static readonly DateTime DT_FROM = new(2010, 1, 1, 0, 0, 0, DateTimeKind.Utc);
 
         [NotNull] public string Name { get; }
 
@@ -45,9 +45,8 @@ namespace FileContainer
             {
                 var firstPage = buff.GetInt(ref offset); // 4 byte
                 var lastPage  = buff.GetInt(ref offset); // 4 byte
-
-                var length   = buff.GetInt(ref offset); // 4 byte
-                var reserved = buff.GetInt(ref offset); // 4 byte
+                var length    = buff.GetInt(ref offset); // 4 byte
+                var reserved  = buff.GetInt(ref offset); // 4 byte, will be "Compressed length"
 
                 var modified = buff.GetInt(ref offset);       // 4 byte
                 var name     = buff.GetString(ref offset);    // 2 byte length + 'length' bytes 
@@ -68,9 +67,8 @@ namespace FileContainer
             {
                 bw.Write(entry.FirstPage); // 4 byte
                 bw.Write(entry.LastPage);  // 4 byte
-
-                bw.Write(entry.Length); // 4 byte
-                bw.Write((int) 0);      // 4 byte
+                bw.Write(entry.Length);    // 4 byte
+                bw.Write((int) 0);         // 4 byte
 
                 bw.Write((int) entry.Modified.Subtract(DT_FROM).TotalSeconds); // 4 byte
                 bw.PutString(entry.Name);                                      // 2 byte length + 'length' bytes
@@ -80,15 +78,14 @@ namespace FileContainer
             bw.Flush();
             return stm.ToArray();
         }
-
-#if DEBUG
+        
         [ExcludeFromCodeCoverage]
         public override string ToString() => $"{Name}: {Length} bytes ({Modified:u}), FP: {FirstPage}";
-#endif
     }
 
     [Flags]
     public enum KVEntryFlags
     {
+        // will be Compressed flag
     }
 }

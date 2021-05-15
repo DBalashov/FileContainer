@@ -9,8 +9,4 @@
       <ProjectReference Include="..\FileContainer\FileContainer.csproj" />
     </ItemGroup>
 
-    <ItemGroup>
-      <PackageReference Include="DotNetZip" Version="1.15.0" />
-    </ItemGroup>
-
 </Project>

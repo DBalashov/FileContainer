@@ -18,11 +18,14 @@ namespace FileContainer
         public int   FreePages  => pageAllocator.GetFreePages().Count();
         public Int64 Length     => stm.Length;
 
+        public readonly PersistentContainerFlags Flags;
+
         #region constructor / dispose
 
-        protected PagedContainerAbstract([NotNull] Stream stm, int pageSize = 4096)
+        protected PagedContainerAbstract([NotNull] Stream stm, int pageSize = 4096, PersistentContainerFlags flags = 0)
         {
             this.stm = stm;
+            Flags    = flags;
 
             try
             {
@@ -58,13 +61,18 @@ namespace FileContainer
             if (isDisposed) return;
             isDisposed = true;
 
-            if (stm.CanWrite && entries.Modified)
-            {
-                entries.Write(stm, header, pageAllocator);
-                stm.Flush();
-            }
+            if (!Flags.HasFlag(PersistentContainerFlags.WriteDirImmediately))
+                WriteHeaders();
 
             DisposeStream();
+        }
+
+        protected void WriteHeaders()
+        {
+            if (!stm.CanWrite || !entries.Modified) return;
+            
+            entries.Write(stm, header, pageAllocator);
+            stm.Flush();
         }
 
         protected virtual void DisposeStream()
@@ -75,14 +83,21 @@ namespace FileContainer
 
         #endregion
 
-        /// <summary> Find entries by names. Mask chars * and ? supported in keys </summary>
+        /// <summary>
+        /// Find entries by names.
+        /// Mask chars * and ? supported in keys.
+        /// Return ALL entries if no keys passed.
+        /// </summary>
         [NotNull]
         public PagedContainerEntry[] Find(params string[] keys) =>
             (keys.Any()
                 ? entries.Find(keys)
                 : entries.All()).ToArray();
 
-        /// <summary> Remove entries by keys. Mask * and ? supported. Return deleted keys. </summary>
+        /// <summary>
+        /// Remove entries by keys. Mask * and ? supported.
+        /// Return deleted keys.
+        /// </summary>
         [NotNull]
         public virtual string[] Delete(params string[] keys)
         {
@@ -96,6 +111,9 @@ namespace FileContainer
                 pageAllocator.FreePages(pages);
                 entries.Remove(entry);
             }
+            
+            if (Flags.HasFlag(PersistentContainerFlags.WriteDirImmediately))
+                WriteHeaders();
 
             return r.ToArray();
         }

@@ -23,6 +23,7 @@ namespace FileContainer
         internal PagedContainerHeader(int pageSize)
         {
             validatePageSize(pageSize);
+
             PageSize         = pageSize;
             PageUserDataSize = pageSize - 4;
         }
@@ -30,7 +31,7 @@ namespace FileContainer
         internal PagedContainerHeader([NotNull] Stream stm)
         {
             if (stm.Length < HEADER_PART)
-                throw new InvalidDataException($"KVFileHeader: File corrupted (too small)");
+                throw new InvalidDataException("PagedContainerHeader: File corrupted (too small)");
 
             stm.Position = 0;
 
@@ -40,7 +41,7 @@ namespace FileContainer
             int offset = 0;
             var sign   = buff.GetInt(ref offset); // 4 byte
             if (sign != SIGN)
-                throw new InvalidDataException($"KVFileHeader: File corruped (signature {sign:X}h invalid, must be {SIGN:X}h)");
+                throw new InvalidDataException($"PagedContainerHeader: File corruped (signature {sign:X}h invalid, must be {SIGN:X}h)");
 
             PageSize         = buff.GetInt(ref offset); // 4 byte
             PageUserDataSize = PageSize - 4;
@@ -48,16 +49,18 @@ namespace FileContainer
 
             DirectoryFirstPage = buff.GetInt(ref offset); // 4 byte
             if (DirectoryFirstPage < 0)
-                throw new InvalidDataException($"KVFileHeader: DirectoryFirstPage has invalid value ({DirectoryFirstPage})");
+                throw new InvalidDataException($"PagedContainerHeader: DirectoryFirstPage has invalid value ({DirectoryFirstPage})");
         }
 
         void validatePageSize(int pageSize)
         {
-            if (pageSize < HEADER_PART)
-                throw new ArgumentException($"KVFileHeader: PageSize must be >= {HEADER_PART} bytes (passed {pageSize} bytes)");
-
-            if (pageSize > 128 * 1024)
-                throw new ArgumentException($"KVFileHeader: PageSize must be <= 128 KB (passed {pageSize} bytes)");
+            switch (pageSize)
+            {
+                case < HEADER_PART:
+                    throw new ArgumentException($"PagedContainerHeader: PageSize must be >= {HEADER_PART} bytes (passed {pageSize} bytes)");
+                case > 128 * 1024:
+                    throw new ArgumentException($"PagedContainerHeader: PageSize must be <= 128 KB (passed {pageSize} bytes)");
+            }
         }
 
         public void Write([NotNull] Stream stm)
