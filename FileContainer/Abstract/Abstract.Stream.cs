@@ -32,6 +32,8 @@ namespace FileContainer
             return s;
         }
 
+        /// <summary> throw if opened stream of any key found </summary>
+        /// <exception cref="InvalidOperationException"></exception>
         void throwIfHasOpenedStream([NotNull] IEnumerable<string> keys)
         {
             foreach (var key in keys)

@@ -8,15 +8,22 @@ namespace FileContainer
 {
     public abstract partial class PagedContainerAbstract : IDisposable
     {
-        [NotNull] internal readonly Stream                        stm;
-        [NotNull] internal readonly PagedContainerHeader          header;
+        [NotNull] internal readonly Stream                        Stream;
+        [NotNull] internal readonly PagedContainerHeader          Header;
         [NotNull] readonly          PageAllocator                 pageAllocator;
         [NotNull] readonly          PagedContainerEntryCollection entries;
 
-        public int   PageSize   => header.PageSize;
-        public int   TotalPages => pageAllocator.TotalPages;
-        public int   FreePages  => pageAllocator.GetFreePages().Count();
-        public Int64 Length     => stm.Length;
+        /// <summary> page size (bytes) </summary>
+        public int PageSize => Header.PageSize;
+
+        /// <summary> total pages in container file </summary>
+        public int TotalPages => pageAllocator.TotalPages;
+
+        /// <summary> free pages in container file </summary>
+        public int FreePages => pageAllocator.GetFreePages().Count();
+
+        /// <summary> length of container file (bytes) </summary>
+        public Int64 Length => Stream.Length;
 
         public readonly PersistentContainerFlags Flags;
 
@@ -24,28 +31,28 @@ namespace FileContainer
 
         protected PagedContainerAbstract([NotNull] Stream stm, int pageSize = 4096, PersistentContainerFlags flags = 0)
         {
-            this.stm = stm;
-            Flags    = flags;
+            this.Stream = stm;
+            Flags       = flags;
 
             try
             {
                 if (stm.Length == 0) // new file
                 {
-                    header = new PagedContainerHeader(pageSize);
-                    header.Write(stm);
+                    Header = new PagedContainerHeader(pageSize);
+                    Header.Write(stm);
 
-                    pageAllocator = new PageAllocator(header);
+                    pageAllocator = new PageAllocator(Header);
                     pageAllocator.Write(stm);
                 }
                 else
                 {
-                    header        = new PagedContainerHeader(stm);
-                    pageAllocator = new PageAllocator(stm, header);
+                    Header        = new PagedContainerHeader(stm);
+                    pageAllocator = new PageAllocator(stm, Header);
                 }
 
-                entries = header.DirectoryFirstPage == 0
+                entries = Header.DirectoryFirstPage == 0
                     ? new PagedContainerEntryCollection()
-                    : new PagedContainerEntryCollection(stm.ReadWithPageSequence(header, header.DirectoryFirstPage));
+                    : new PagedContainerEntryCollection(stm.ReadWithPageSequence(Header, Header.DirectoryFirstPage));
             }
             catch
             {
@@ -69,16 +76,16 @@ namespace FileContainer
 
         protected void WriteHeaders()
         {
-            if (!stm.CanWrite || !entries.Modified) return;
-            
-            entries.Write(stm, header, pageAllocator);
-            stm.Flush();
+            if (!Stream.CanWrite || !entries.Modified) return;
+
+            entries.Write(Stream, Header, pageAllocator);
+            Stream.Flush();
         }
 
         protected virtual void DisposeStream()
         {
-            stm.Close();
-            stm.Dispose();
+            Stream.Close();
+            Stream.Dispose();
         }
 
         #endregion
@@ -107,11 +114,11 @@ namespace FileContainer
             foreach (var entry in entries.Find(keys).ToArray())
             {
                 r.Add(entry.Name);
-                var pages = stm.ReadPageSequence(header, entry.FirstPage);
+                var pages = Stream.ReadPageSequence(Header, entry.FirstPage);
                 pageAllocator.FreePages(pages);
                 entries.Remove(entry);
             }
-            
+
             if (Flags.HasFlag(PersistentContainerFlags.WriteDirImmediately))
                 WriteHeaders();
 

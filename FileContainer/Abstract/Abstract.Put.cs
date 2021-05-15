@@ -9,10 +9,6 @@ namespace FileContainer
 {
     public abstract partial class PagedContainerAbstract
     {
-        static readonly Encoding defaultEncoding = Encoding.UTF8;
-        
-        #region byte[]
-
         /// <summary> Create or replace entry with specified key. </summary>
         /// <exception cref="ArgumentException"></exception>
         public virtual PutAppendResult Put([NotNull] string key, [NotNull] byte[] data)
@@ -66,49 +62,13 @@ namespace FileContainer
             return r;
         }
 
-        #endregion
-        
-        #region strings
-
-        /// <summary> Create or replace entry with specified key </summary>
-        /// <exception cref="ArgumentException"></exception>
-        public virtual PutAppendResult Put([NotNull] string key, [NotNull] string data)
-        {
-            if (string.IsNullOrEmpty(data))
-                throw new ArgumentException("Argument can't be null or empty", nameof(data));
-
-            return Put(key, defaultEncoding.GetBytes(data));
-        }
-
-        /// <summary>
-        /// Create or replace of passed entries.
-        /// Value in dictionary must not be null or empty.
-        /// </summary>
-        /// <exception cref="ArgumentException"></exception>
-        [NotNull]
-        public virtual Dictionary<string, PutAppendResult> Put([NotNull] Dictionary<string, string> keyValues)
-        {
-            foreach (var item in keyValues)
-            {
-                if (string.IsNullOrEmpty(item.Key))
-                    throw new ArgumentException("Argument can't be null or empty", nameof(keyValues));
-
-                if (string.IsNullOrEmpty(item.Value))
-                    throw new ArgumentException($"Argument can't be null or empty: {item.Key}", nameof(keyValues));
-            }
-
-            return Put(keyValues.ToDictionary(p => p.Key, p => defaultEncoding.GetBytes(p.Value), StringComparer.InvariantCultureIgnoreCase));
-        }
-        
-        #endregion
-        
         PutAppendResult put([NotNull] string key, [NotNull] byte[] data)
         {
-            var requiredPages = header.GetRequiredPages(data.Length);
+            var requiredPages = Header.GetRequiredPages(data.Length);
 
             if (entries.TryGet(key, out var existingEntry))
             {
-                var allocatedPages = stm.ReadPageSequence(header, existingEntry.FirstPage);
+                var allocatedPages = Stream.ReadPageSequence(Header, existingEntry.FirstPage);
                 if (requiredPages > allocatedPages.Length) // new data require additional pages?
                 {
                     // allocate require page count
@@ -125,17 +85,16 @@ namespace FileContainer
                     allocatedPages = newPages;
                 }
 
-                stm.WriteIntoPages(header, data, 0, allocatedPages);
+                Stream.WriteIntoPages(Header, data, 0, allocatedPages);
                 entries.Update(existingEntry, allocatedPages.First(), allocatedPages.Last(), data.Length);
                 return PutAppendResult.Updated;
             }
 
             var pages = pageAllocator.AllocatePages(requiredPages);
-            stm.WriteIntoPages(header, data, 0, pages);
+            Stream.WriteIntoPages(Header, data, 0, pages);
             entries.Add(new PagedContainerEntry(key, pages.First(), pages.Last(), data.Length, 0, DateTime.UtcNow));
             return PutAppendResult.Created;
         }
-
     }
 
     public enum PutAppendResult

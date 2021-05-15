@@ -13,13 +13,11 @@ namespace FileContainer
         [NotNull] readonly PagedContainerEntry    entry;
         [NotNull] readonly int[]                  pages;
 
-        [NotNull] public PagedContainerEntry Entry => entry;
-
         internal EntryReadonlyStream([NotNull] PagedContainerAbstract parent, [NotNull] PagedContainerEntry entry)
         {
             this.parent = parent;
             this.entry  = entry;
-            pages       = parent.stm.ReadPageSequence(parent.header, entry.FirstPage);
+            pages       = parent.Stream.ReadPageSequence(parent.Header, entry.FirstPage);
         }
 
         public override int Read(byte[] buffer, int offset, int count)
@@ -40,7 +38,7 @@ namespace FileContainer
 
             #endregion
 
-            var userDataLength = parent.header.PageUserDataSize;
+            var userDataLength = parent.Header.PageUserDataSize;
             var offsetInPage   = (int) (Position - (Position / userDataLength) * userDataLength);
 
             if (Position + count > entry.Length)
@@ -51,13 +49,13 @@ namespace FileContainer
             var readBytes = 0;
             foreach (var pageIndex in pages.Skip((int) Position / userDataLength))
             {
-                parent.stm.Position = parent.PageSize * pageIndex + offsetInPage;
+                parent.Stream.Position = parent.PageSize * pageIndex + offsetInPage;
 
                 var needToRead = count > (userDataLength - offsetInPage)
                     ? userDataLength - offsetInPage
                     : count;
 
-                parent.stm.Read(buffer, offset, needToRead);
+                parent.Stream.Read(buffer, offset, needToRead);
                 offset += needToRead;
                 count  -= needToRead;
 
@@ -78,9 +76,9 @@ namespace FileContainer
 
             Position = origin switch
             {
-                SeekOrigin.Begin => offset > entry.Length ? entry.Length : offset,              // если offset за границу размера - ставим в конец
-                SeekOrigin.Current => Position + offset > entry.Length ? entry.Length : offset, // если position + offset за границу размера - ставим в конец 
-                SeekOrigin.End => entry.Length - offset < 0 ? 0 : entry.Length - offset,        // если offset < 0 - ставим в 0
+                SeekOrigin.Begin => offset > entry.Length ? entry.Length : offset,              // if offset more than stream length -> set to end of file
+                SeekOrigin.Current => Position + offset > entry.Length ? entry.Length : offset, // if position + offset more than stream length -> set to end of file 
+                SeekOrigin.End => entry.Length - offset < 0 ? 0 : entry.Length - offset,        // if offset < 0 - set to begin of file
                 _ => Position
             };
 
@@ -95,13 +93,12 @@ namespace FileContainer
         public override bool CanRead  => true;
         public override bool CanSeek  => true;
         public override bool CanWrite => false;
+        public override long Length   => entry.Length;
 
         public override void Flush()
         {
         }
-
-        public override long Length => entry.Length;
-
+        
         protected override void Dispose(bool disposing)
         {
             parent.DetachStream(entry.Name);

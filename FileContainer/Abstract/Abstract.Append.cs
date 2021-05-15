@@ -7,8 +7,6 @@ namespace FileContainer
 {
     public abstract partial class PagedContainerAbstract
     {
-        #region byte[]
-
         /// <summary> Append data to end of existing entry. If entry doesn't exists - create new with passed data </summary>
         public virtual PutAppendResult Append([NotNull] string key, [NotNull] byte[] data)
         {
@@ -63,35 +61,6 @@ namespace FileContainer
             return r;
         }
 
-        #endregion
-
-        #region string
-
-        public virtual PutAppendResult Append([NotNull] string key, [NotNull] string data)
-        {
-            if (string.IsNullOrEmpty(data))
-                throw new ArgumentException("Argument can't be null or empty", nameof(data));
-
-            return Append(key, defaultEncoding.GetBytes(data));
-        }
-
-        [NotNull]
-        public virtual Dictionary<string, PutAppendResult> Append([NotNull] Dictionary<string, string> keyValues)
-        {
-            foreach (var item in keyValues)
-            {
-                if (string.IsNullOrEmpty(item.Key))
-                    throw new ArgumentException("Argument can't be null or empty", nameof(keyValues));
-
-                if (string.IsNullOrEmpty(item.Value))
-                    throw new ArgumentException($"Argument can't be null or empty: {item.Key}", nameof(keyValues));
-            }
-
-            return Append(keyValues.ToDictionary(p => p.Key, p => defaultEncoding.GetBytes(p.Value), StringComparer.InvariantCultureIgnoreCase));
-        }
-        
-        #endregion
-
         PutAppendResult append([NotNull] string key, [NotNull] byte[] data)
         {
             if (!entries.TryGet(key, out var existingEntry))
@@ -100,27 +69,27 @@ namespace FileContainer
                 return PutAppendResult.Created;
             }
 
-            var userDataAtLastPage = existingEntry.Length % header.PageUserDataSize; // rest of data on last page
-            stm.Position = existingEntry.LastPage * header.PageSize + userDataAtLastPage;
+            var userDataAtLastPage = existingEntry.Length % Header.PageUserDataSize; // rest of data on last page
+            Stream.Position = existingEntry.LastPage * Header.PageSize + userDataAtLastPage;
 
             int lastPage;
-            if (header.PageUserDataSize - userDataAtLastPage >= data.Length) // is there enough free space on the last page for new data (no page allocation)?
+            if (Header.PageUserDataSize - userDataAtLastPage >= data.Length) // is there enough free space on the last page for new data (no page allocation)?
             {
-                stm.Write(data, 0, data.Length);
+                Stream.Write(data, 0, data.Length);
                 lastPage = existingEntry.LastPage;
             }
             else
             {
-                var lengthToWriteOnExistingLastPage = header.PageUserDataSize - userDataAtLastPage;
-                stm.Write(data, 0, lengthToWriteOnExistingLastPage); // head of data write to free space on last page 
+                var lengthToWriteOnExistingLastPage = Header.PageUserDataSize - userDataAtLastPage;
+                Stream.Write(data, 0, lengthToWriteOnExistingLastPage); // head of data write to free space on last page 
 
                 var remainDataLength = data.Length - lengthToWriteOnExistingLastPage;
                 if (remainDataLength > 0)
                 {
-                    var additionalPages = pageAllocator.AllocatePages(header.GetRequiredPages(remainDataLength));
+                    var additionalPages = pageAllocator.AllocatePages(Header.GetRequiredPages(remainDataLength));
 
-                    stm.Write(BitConverter.GetBytes(additionalPages.First()), 0, 4); // link on first new allocated page
-                    stm.WriteIntoPages(header, data, lengthToWriteOnExistingLastPage, additionalPages);
+                    Stream.Write(BitConverter.GetBytes(additionalPages.First()), 0, 4); // link on first new allocated page
+                    Stream.WriteIntoPages(Header, data, lengthToWriteOnExistingLastPage, additionalPages);
                     lastPage = additionalPages.Last();
                 }
                 else lastPage = existingEntry.LastPage;

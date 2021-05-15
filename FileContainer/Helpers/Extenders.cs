@@ -53,5 +53,8 @@ namespace FileContainer
             offset += 4;
             return r;
         }
+        
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        internal static bool ContainMask([NotNull] this string name) => name.Contains("*") || name.Contains("?");
     }
 }
