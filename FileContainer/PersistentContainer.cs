@@ -39,7 +39,7 @@ namespace FileContainer
     public class PersistentContainer : PagedContainerAbstract
     {
         public PersistentContainer([NotNull] string fileName, int pageSize = 4096, PersistentContainerFlags flags = 0) :
-            base(new FileStream(fileName, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.None, pageSize * 2), pageSize)
+            base(new FileStream(fileName, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.None, pageSize * 2), pageSize, flags)
         {
         }
     }

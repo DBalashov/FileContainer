@@ -21,9 +21,13 @@ namespace FileContainer
 
         #region Read / Write
 
-        internal PagedContainerEntryCollection(PageSequence ps)
+        internal PagedContainerEntryCollection([NotNull] PagedContainerHeader header, PageSequence ps)
         {
-            entries  = PagedContainerEntry.Unpack(ps.Data).ToDictionary(p => p.Name, StringComparer.InvariantCultureIgnoreCase);
+            var buff = ps.Data;
+            if (header.Flags.HasFlag(PersistentContainerFlags.Compressed))
+                buff = buff.GZipUnpack();
+
+            entries  = PagedContainerEntry.Unpack(buff).ToDictionary(p => p.Name, StringComparer.InvariantCultureIgnoreCase);
             pages    = ps.Pages;
             Modified = false;
         }
@@ -36,7 +40,10 @@ namespace FileContainer
         {
             var targetPages = pages;
 
-            var buff          = PagedContainerEntry.Pack(entries.Values.ToArray());
+            var buff = PagedContainerEntry.Pack(entries.Values.ToArray());
+            if (header.Flags.HasFlag(PersistentContainerFlags.Compressed))
+                buff = buff.GZipPack();
+
             var requiredPages = header.GetRequiredPages(buff.Length);
 
             if (requiredPages > targetPages.Length) // need to allocate additional pages?

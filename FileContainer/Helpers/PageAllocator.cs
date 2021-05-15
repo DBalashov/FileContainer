@@ -29,16 +29,20 @@ namespace FileContainer
         public PageAllocator([NotNull] PagedContainerHeader header)
         {
             this.header        = header;
+            
             pageAllocations    = new ExpandableBitArray(2);
             pageAllocations[0] = true;
             pageAllocations[1] = true;
         }
 
-        public PageAllocator([NotNull] Stream stm, [NotNull] PagedContainerHeader header)
+        public PageAllocator([NotNull] PagedContainerHeader header, [NotNull] Stream stm)
         {
             this.header = header;
 
             var buff          = stm.ReadWithPageSequence(header, FIRST_PA_PAGE).Data;
+            if (header.Flags.HasFlag(PersistentContainerFlags.Compressed))
+                buff = buff.GZipUnpack();
+            
             var realByteCount = BitConverter.ToInt32(buff, 0);
             var newBuffer     = new byte[realByteCount];
             Buffer.BlockCopy(buff, 4, newBuffer, 0, newBuffer.Length);
@@ -53,6 +57,10 @@ namespace FileContainer
             var newBuffer = new byte[buff.Length + 4];
             Array.Copy(BitConverter.GetBytes(buff.Length), 0, newBuffer, 0, 4);
             Array.Copy(buff, 0, newBuffer, 4, buff.Length);
+            
+            if (header.Flags.HasFlag(PersistentContainerFlags.Compressed))
+                newBuffer = newBuffer.GZipPack();
+
             return newBuffer;
         }
 

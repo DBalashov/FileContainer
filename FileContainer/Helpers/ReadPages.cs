@@ -7,7 +7,10 @@ namespace FileContainer
 {
     static class ReadExtenders
     {
-        /// <summary> Read data and page numbers, starting from 'startFromPage' </summary>
+        /// <summary>
+        /// Read data and page numbers, starting from 'startFromPage'
+        /// Used in PageAllocator & PagedContainerEntryCollection
+        /// </summary>
         internal static PageSequence ReadWithPageSequence([NotNull] this Stream stm, [NotNull] PagedContainerHeader header, int startFromPage)
         {
             using var stmCollector = new MemoryStream();

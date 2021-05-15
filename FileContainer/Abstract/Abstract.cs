@@ -45,12 +45,12 @@ namespace FileContainer
                 else
                 {
                     Header        = new PagedContainerHeader(stm);
-                    pageAllocator = new PageAllocator(stm, Header);
+                    pageAllocator = new PageAllocator(Header, stm);
                 }
 
                 entries = Header.DirectoryFirstPage == 0
                     ? new PagedContainerEntryCollection()
-                    : new PagedContainerEntryCollection(stm.ReadWithPageSequence(Header, Header.DirectoryFirstPage));
+                    : new PagedContainerEntryCollection(Header, stm.ReadWithPageSequence(Header, Header.DirectoryFirstPage));
             }
             catch
             {
