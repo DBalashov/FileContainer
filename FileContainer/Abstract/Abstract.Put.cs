@@ -92,7 +92,7 @@ namespace FileContainer
 
             var pages = pageAllocator.AllocatePages(requiredPages);
             Stream.WriteIntoPages(Header, data, 0, pages);
-            entries.Add(new PagedContainerEntry(key, pages.First(), pages.Last(), data.Length, 0, DateTime.UtcNow));
+            entries.Add(new PagedContainerEntry(key, pages.First(), pages.Last(), data.Length, data.Length, 0, DateTime.UtcNow));
             return PutAppendResult.Created;
         }
     }

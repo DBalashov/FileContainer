@@ -8,7 +8,8 @@ namespace FileContainer
 {
     class PagedContainerHeader
     {
-        const int HEADER_PART = 12;
+        /// <summary> header size == minimal page size </summary>
+        const int HEADER_PART = 16;
 
         const int SIGN = 0x78213645;
 
@@ -17,15 +18,18 @@ namespace FileContainer
 
         public readonly int PageUserDataSize;
 
+        public readonly PersistentContainerFlags Flags;
+
         /// <summary> first page index of entries directory. 0 for new files, will updated after adding first entry </summary>
         public int DirectoryFirstPage;
 
-        internal PagedContainerHeader(int pageSize)
+        internal PagedContainerHeader(int pageSize, PersistentContainerFlags flags)
         {
             validatePageSize(pageSize);
 
             PageSize         = pageSize;
             PageUserDataSize = pageSize - 4;
+            Flags            = flags;
         }
 
         internal PagedContainerHeader([NotNull] Stream stm)
@@ -50,6 +54,8 @@ namespace FileContainer
             DirectoryFirstPage = buff.GetInt(ref offset); // 4 byte
             if (DirectoryFirstPage < 0)
                 throw new InvalidDataException($"PagedContainerHeader: DirectoryFirstPage has invalid value ({DirectoryFirstPage})");
+
+            Flags = (PersistentContainerFlags) buff.GetInt(ref offset);
         }
 
         void validatePageSize(int pageSize)
@@ -71,9 +77,10 @@ namespace FileContainer
             bw.Write(SIGN);               // 4 byte
             bw.Write(PageSize);           // 4 byte
             bw.Write(DirectoryFirstPage); // 4 byte
+            bw.Write((int) Flags);        // 4 byte
         }
 
-        /// <summary> возвращает количество требуемых страниц для переданного количества байтов (с вычетом служебных данных в конце страницы) </summary>
+        /// <summary> return required page count for store lengthInBytes (including internal data size at end of each page) </summary>
         public int GetRequiredPages(int lengthInBytes) =>
             (int) Math.Ceiling(lengthInBytes / (double) PageUserDataSize);
 

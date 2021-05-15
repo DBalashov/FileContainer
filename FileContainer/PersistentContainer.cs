@@ -47,6 +47,7 @@ namespace FileContainer
     [Flags]
     public enum PersistentContainerFlags
     {
-        WriteDirImmediately = 1
+        WriteDirImmediately = 1,
+        Compressed          = 2
     }
 }

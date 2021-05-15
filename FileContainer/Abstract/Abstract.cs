@@ -25,20 +25,18 @@ namespace FileContainer
         /// <summary> length of container file (bytes) </summary>
         public Int64 Length => Stream.Length;
 
-        public readonly PersistentContainerFlags Flags;
+        public PersistentContainerFlags Flags => Header.Flags;
 
         #region constructor / dispose
 
         protected PagedContainerAbstract([NotNull] Stream stm, int pageSize = 4096, PersistentContainerFlags flags = 0)
         {
-            this.Stream = stm;
-            Flags       = flags;
-
+            Stream = stm;
             try
             {
                 if (stm.Length == 0) // new file
                 {
-                    Header = new PagedContainerHeader(pageSize);
+                    Header = new PagedContainerHeader(pageSize, flags);
                     Header.Write(stm);
 
                     pageAllocator = new PageAllocator(Header);
@@ -65,7 +63,8 @@ namespace FileContainer
 
         public void Dispose()
         {
-            if (isDisposed) return;
+            // ReSharper disable once ConditionIsAlwaysTrueOrFalse
+            if (isDisposed || entries == null) return;
             isDisposed = true;
 
             if (!Flags.HasFlag(PersistentContainerFlags.WriteDirImmediately))

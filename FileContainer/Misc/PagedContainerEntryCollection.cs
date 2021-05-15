@@ -19,77 +19,14 @@ namespace FileContainer
             pages   = new int[0];
         }
 
+        #region Read / Write
+
         internal PagedContainerEntryCollection(PageSequence ps)
         {
             entries  = PagedContainerEntry.Unpack(ps.Data).ToDictionary(p => p.Name, StringComparer.InvariantCultureIgnoreCase);
             pages    = ps.Pages;
             Modified = false;
         }
-
-        public bool TryGet([NotNull] string key, out PagedContainerEntry item) => 
-            string.IsNullOrEmpty(key) 
-                ? throw new ArgumentException("Argument can't be null or empty", nameof(key)) 
-                : entries.TryGetValue(key, out item);
-
-        public void Add([NotNull] PagedContainerEntry entry)
-        {
-            entries.Add(entry.Name, entry);
-            Modified = true;
-        }
-
-        public bool Remove([NotNull] PagedContainerEntry entry)
-        {
-            if (!entries.ContainsKey(entry.Name)) return false;
-
-            entries.Remove(entry.Name);
-            Modified = true;
-            return true;
-        }
-
-        public void Update([NotNull] PagedContainerEntry entry, int pageFirst, int pageLast, int dataLength)
-        {
-            entry.FirstPage = pageFirst;
-            entry.LastPage  = pageLast;
-            entry.Length    = dataLength;
-            entry.Modified  = DateTime.UtcNow;
-
-            Modified = true;
-        }
-
-        /// <exception cref="ArgumentException"></exception>
-        [NotNull]
-        public IEnumerable<PagedContainerEntry> Find(params string[] keys)
-        {
-            var processed = new HashSet<string>(StringComparer.InvariantCultureIgnoreCase);
-            
-            foreach (var key in keys)
-                if (string.IsNullOrEmpty(key))
-                    throw new ArgumentException("Argument can't be null or empty", nameof(keys));
-            
-            foreach (var key in keys)
-            {
-                if (key.ContainMask())
-                {
-                    foreach (var entry in entries)
-                        if (!processed.Contains(entry.Key) && PatternMatcher.Match(entry.Key, key))
-                        {
-                            processed.Add(entry.Key);
-                            yield return entry.Value;
-                        }
-                }
-                else
-                {
-                    if (entries.TryGetValue(key, out var entry) && !processed.Contains(key))
-                    {
-                        processed.Add(key);
-                        yield return entry;
-                    }
-                }
-            }
-        }
-
-        [NotNull]
-        public IEnumerable<PagedContainerEntry> All() => entries.Values.ToArray();
 
         /// <summary>
         /// Write entries directory to pages. If pages not enough for new directory - additional pages will allocated.
@@ -123,6 +60,73 @@ namespace FileContainer
 
             pages = targetPages;
         }
+
+        #endregion
+
+        public bool TryGet([NotNull] string key, out PagedContainerEntry item) =>
+            string.IsNullOrEmpty(key)
+                ? throw new ArgumentException("Argument can't be null or empty", nameof(key))
+                : entries.TryGetValue(key, out item);
+
+        public void Add([NotNull] PagedContainerEntry entry)
+        {
+            entries.Add(entry.Name, entry);
+            Modified = true;
+        }
+
+        public bool Remove([NotNull] PagedContainerEntry entry)
+        {
+            if (!entries.ContainsKey(entry.Name)) return false;
+
+            entries.Remove(entry.Name);
+            Modified = true;
+            return true;
+        }
+
+        public void Update([NotNull] PagedContainerEntry entry, int pageFirst, int pageLast, int dataLength)
+        {
+            entry.FirstPage = pageFirst;
+            entry.LastPage  = pageLast;
+            entry.Length    = dataLength;
+            entry.Modified  = DateTime.UtcNow;
+
+            Modified = true;
+        }
+
+        /// <exception cref="ArgumentException"></exception>
+        [NotNull]
+        public IEnumerable<PagedContainerEntry> Find(params string[] keys)
+        {
+            var processed = new HashSet<string>(StringComparer.InvariantCultureIgnoreCase);
+
+            foreach (var key in keys)
+                if (string.IsNullOrEmpty(key))
+                    throw new ArgumentException("Argument can't be null or empty", nameof(keys));
+
+            foreach (var key in keys)
+            {
+                if (key.ContainMask())
+                {
+                    foreach (var entry in entries)
+                        if (!processed.Contains(entry.Key) && PatternMatcher.Match(entry.Key, key))
+                        {
+                            processed.Add(entry.Key);
+                            yield return entry.Value;
+                        }
+                }
+                else
+                {
+                    if (entries.TryGetValue(key, out var entry) && !processed.Contains(key))
+                    {
+                        processed.Add(key);
+                        yield return entry;
+                    }
+                }
+            }
+        }
+
+        [NotNull]
+        public IEnumerable<PagedContainerEntry> All() => entries.Values.ToArray();
 
 #if DEBUG
         public override string ToString() => $"Pages: {pages.Length}, Entries: {entries.Count}";
