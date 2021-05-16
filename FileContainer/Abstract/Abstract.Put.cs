@@ -64,7 +64,25 @@ namespace FileContainer
 
         PutAppendResult put([NotNull] string key, [NotNull] byte[] data)
         {
+            var rawLength = data.Length;
+
             var requiredPages = Header.GetRequiredPages(data.Length);
+            var entryFlags    = Header.Flags.HasFlag(PersistentContainerFlags.Compressed) ? EntryFlags.Compressed : 0;
+
+            if (Header.Flags.HasFlag(PersistentContainerFlags.Compressed))
+            {
+                var compressedData              = Header.DataHandler.Pack(data);
+                var compressedDataRequiredPages = Header.GetRequiredPages(compressedData.Length);
+                if (compressedDataRequiredPages >= requiredPages) // compressed data occupate same or more pages ?
+                {
+                    entryFlags = 0;
+                }
+                else
+                {
+                    data          = compressedData;
+                    requiredPages = compressedDataRequiredPages;
+                }
+            }
 
             if (entries.TryGet(key, out var existingEntry))
             {
@@ -86,13 +104,19 @@ namespace FileContainer
                 }
 
                 Stream.WriteIntoPages(Header, data, 0, allocatedPages);
-                entries.Update(existingEntry, allocatedPages.First(), allocatedPages.Last(), data.Length);
+                entries.Update(existingEntry,
+                               allocatedPages.First(), allocatedPages.Last(),
+                               rawLength, data.Length,
+                               entryFlags);
                 return PutAppendResult.Updated;
             }
 
             var pages = pageAllocator.AllocatePages(requiredPages);
             Stream.WriteIntoPages(Header, data, 0, pages);
-            entries.Add(new PagedContainerEntry(key, pages.First(), pages.Last(), data.Length, data.Length, 0, DateTime.UtcNow));
+            entries.Add(new PagedContainerEntry(key,
+                                                pages.First(), pages.Last(),
+                                                rawLength, data.Length,
+                                                entryFlags, DateTime.UtcNow));
             return PutAppendResult.Created;
         }
     }

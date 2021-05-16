@@ -88,13 +88,9 @@ namespace FileContainer
             return true;
         }
 
-        public void Update([NotNull] PagedContainerEntry entry, int pageFirst, int pageLast, int dataLength)
+        public void Update([NotNull] PagedContainerEntry entry, int pageFirst, int pageLast, int rawLength, int compressedLength, EntryFlags flags)
         {
-            entry.FirstPage = pageFirst;
-            entry.LastPage  = pageLast;
-            entry.Length    = dataLength;
-            entry.Modified  = DateTime.UtcNow;
-
+            entry.Update(pageFirst, pageLast, rawLength, compressedLength, flags);
             Modified = true;
         }
 

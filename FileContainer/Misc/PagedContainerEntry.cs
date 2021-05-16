@@ -12,27 +12,33 @@ namespace FileContainer
         [NotNull] public string Name { get; }
 
         /// <summary> in bytes </summary>
-        public int Length { get; internal set; }
+        public int Length { get; private set; }
 
         /// <summary> in bytes </summary>
-        public int CompressedLength { get; internal set; }
+        public int CompressedLength { get; private set; }
 
-        public EntryFlags Flags { get; internal set; }
+        public EntryFlags Flags { get; private set; }
 
         /// <summary> UTC </summary>
-        public DateTime Modified { get; internal set; }
+        public DateTime Modified { get; private set; }
 
-        public int FirstPage { get; internal set; }
-        public int LastPage  { get; internal set; }
+        public int FirstPage { get; private set; }
+        public int LastPage  { get; private set; }
 
-        internal PagedContainerEntry([NotNull] string name, int firstPage, int lastPage, int rawLength, int compressedLength, EntryFlags flags, DateTime modified)
+        internal PagedContainerEntry([NotNull] string name, int pageFirst, int pageLast, int rawLength, int compressedLength, EntryFlags flags, DateTime modified)
         {
-            Name             = name;
-            FirstPage        = firstPage;
-            LastPage         = lastPage;
+            Name = name;
+            Update(pageFirst, pageLast, rawLength, compressedLength, flags);
+            Modified = modified;
+        }
+
+        public void Update(int pageFirst, int pageLast, int rawLength, int compressedLength, EntryFlags flags)
+        {
+            FirstPage        = pageFirst;
+            LastPage         = pageLast;
             Length           = rawLength;
             CompressedLength = compressedLength;
-            Modified         = modified;
+            Modified         = DateTime.UtcNow;
             Flags            = flags;
         }
 
@@ -43,5 +49,6 @@ namespace FileContainer
     [Flags]
     public enum EntryFlags
     {
+        Compressed = 1
     }
 }

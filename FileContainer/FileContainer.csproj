@@ -14,4 +14,10 @@
         <PackageReference Include="JetBrains.Annotations" Version="2021.1.0" />
     </ItemGroup>
 
+    <ItemGroup>
+      <Compile Update="Misc\PagedContainerEntry.Extenders.cs">
+        <DependentUpon>PagedContainerEntry.cs</DependentUpon>
+      </Compile>
+    </ItemGroup>
+
 </Project>

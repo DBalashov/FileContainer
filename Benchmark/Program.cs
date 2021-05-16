@@ -19,9 +19,14 @@ namespace Benchmark
         static void Main(string[] args)
         {
             var extractedFiles = extractFile();
-            testSingleWrites(extractedFiles);
+
+            testSingleWrites(extractedFiles, 0);
             foreach (var batchSize in batchSizes)
-                testBatchWrites(extractedFiles, batchSize);
+                testBatchWrites(extractedFiles, batchSize, 0);
+
+            testSingleWrites(extractedFiles, PersistentContainerFlags.Compressed);
+            foreach (var batchSize in batchSizes)
+                testBatchWrites(extractedFiles, batchSize, PersistentContainerFlags.Compressed);
 
             foreach (var pageSize in pageSizes)
             {
@@ -52,11 +57,11 @@ namespace Benchmark
 
         #region test - single writes
 
-        static void testSingleWrites(Dictionary<string, byte[]> extractedFiles)
+        static void testSingleWrites(Dictionary<string, byte[]> extractedFiles, PersistentContainerFlags flags)
         {
             var totalLengths = extractedFiles.Sum(p => p.Value.Length);
 
-            Console.WriteLine("Single requests - write");
+            Console.WriteLine("Single requests - write [{0}]", flags);
             Console.WriteLine("Page\tms\tMB\tMB/sec\tLost(%)");
             foreach (var pageSize in pageSizes)
             {
@@ -65,7 +70,7 @@ namespace Benchmark
                     File.Delete(targetFileName);
 
                 var sw = Stopwatch.StartNew();
-                using (var container = new PersistentContainer(targetFileName, pageSize))
+                using (var container = new PersistentContainer(targetFileName, pageSize, flags))
                     foreach (var file in extractedFiles)
                         container.Put(file.Key, file.Value);
 
@@ -74,10 +79,12 @@ namespace Benchmark
                 sw.Stop();
 
                 var lengthInMB = targetFileLength / 1048576.0;
-                Console.WriteLine("{0,5}\t{1}\t{2:F1}\t{3:F1}\t{4:F2}",
+                Console.WriteLine("{0,5}\t{1}\t{2:F1}\t{3:F1}\t{4}",
                                   pageSize, sw.ElapsedMilliseconds, lengthInMB,
                                   lengthInMB / (sw.ElapsedMilliseconds / 1000.0),
-                                  ((targetFileLength - totalLengths) / (double) targetFileLength) * 100);
+                                  flags == 0
+                                      ? (((targetFileLength - totalLengths) / (double) targetFileLength) * 100).ToString("F2")
+                                      : "-");
             }
         }
 
@@ -85,11 +92,11 @@ namespace Benchmark
 
         #region test - batch writes
 
-        static void testBatchWrites(Dictionary<string, byte[]> extractedFiles, int batchSize)
+        static void testBatchWrites(Dictionary<string, byte[]> extractedFiles, int batchSize, PersistentContainerFlags flags)
         {
             Console.WriteLine();
-            Console.WriteLine("Batch requests - batch: {0}", batchSize);
-            Console.WriteLine("Page\tms\tMB/sec");
+            Console.WriteLine("Batch requests [{0}]: {1}", flags == 0 ? "-" : flags.ToString(), batchSize);
+            Console.WriteLine("Page        ms     MB/sec(w)    MB/sec(r)     Ratio");
 
             var items = makeBatches(extractedFiles, batchSize);
             foreach (var pageSize in pageSizes)
@@ -99,18 +106,36 @@ namespace Benchmark
                     File.Delete(targetFileName);
 
                 var sw = Stopwatch.StartNew();
-                using (var container = new PersistentContainer(targetFileName, pageSize))
+                using (var container = new PersistentContainer(targetFileName, pageSize, flags))
                     foreach (var item in items)
                         container.Put(item);
 
+                var elapsedWrites = sw.ElapsedMilliseconds;
+
                 var targetFileLength = new FileInfo(targetFileName).Length;
 
+                sw.Restart();
+                var rawLength        = 0;
+                var compressedLength = 0;
+                using (var container = new PersistentContainer(targetFileName, pageSize, flags))
+                {
+                    foreach (var entry in container.Find())
+                    {
+                        compressedLength += entry.CompressedLength;
+                        rawLength        += container.Get(entry.Name)?.Length ?? 0;
+                    }
+                }
+
+                var elapsedRead = sw.ElapsedMilliseconds;
                 sw.Stop();
 
-                var lengthInMB = targetFileLength / 1048576.0;
-                Console.WriteLine("{0,5}\t{1}\t{2:F1}",
+                var lengthInMB    = targetFileLength / 1048576.0;
+                var rawLengthInMB = rawLength / 1048576.0;
+                Console.WriteLine("{0,5} {1,8}      {2,8:F1}     {3,8:F1} {4,8:F2}x",
                                   pageSize, sw.ElapsedMilliseconds,
-                                  lengthInMB / (sw.ElapsedMilliseconds / 1000.0));
+                                  lengthInMB / (elapsedWrites / 1000.0),
+                                  rawLengthInMB / (elapsedRead / 1000.0),
+                                  rawLength / (double) compressedLength);
             }
         }
 

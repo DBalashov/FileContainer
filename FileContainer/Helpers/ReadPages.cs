@@ -53,7 +53,9 @@ namespace FileContainer
                 currentPageIndex = BitConverter.ToInt32(buff, header.PageUserDataSize);
             }
 
-            return stmCollector.ToArray();
+            return entry.Flags.HasFlag(EntryFlags.Compressed)
+                ? header.DataHandler.Unpack(stmCollector.ToArray())
+                : stmCollector.ToArray();
         }
 
         /// <summary>

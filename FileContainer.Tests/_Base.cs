@@ -7,12 +7,12 @@ namespace FileContainer.Tests
 {
     public abstract class TestBase
     {
-        static readonly Random r = new Random(Guid.NewGuid().GetHashCode());
+        static readonly Random r = new(Guid.NewGuid().GetHashCode());
 
         protected byte[] getRandomBytes(int count) => Enumerable.Range(0, count).Select(p => (byte) r.Next(255)).ToArray();
 
         protected Dictionary<string, byte[]> getRandomBlocks(int pageSize) =>
-            new Dictionary<string, byte[]>()
+            new()
             {
                 ["dir/file01.txt"] = getRandomBytes(pageSize - 1), // (pageSize-4)-1  => 1 страница (1 байт свободен на странице)
                 ["dir/file02.txt"] = getRandomBytes(pageSize),     // (pageSize-4)    => 1 страница (точное совпадение)
@@ -27,8 +27,8 @@ namespace FileContainer.Tests
                 ["dir/fileB6.txt"] = getRandomBytes(pageSize * 100 + 1), // 100*(pageSize-4)+1   => 101 страница (1 байт на последней странице)
             };
 
-        protected string                fileName;
-        readonly  List<PagedContainerAbstract> stores = new List<PagedContainerAbstract>();
+        protected string                       fileName;
+        readonly  List<PagedContainerAbstract> stores = new();
 
         protected void DoIt(Action<Func<PagedContainerAbstract>> action)
         {
@@ -38,13 +38,14 @@ namespace FileContainer.Tests
                     fileName = Path.Combine(Path.GetTempPath(), "_Reads.kv");
                     if (File.Exists(fileName))
                         File.Delete(fileName);
-                    
+
                     action(() =>
                     {
                         var s = new PersistentContainer(fileName, pageSize);
                         stores.Add(s);
                         return s;
                     });
+                    
 
                     var stm = new MemoryStream();
                     action(() =>
@@ -53,12 +54,16 @@ namespace FileContainer.Tests
                         stores.Add(s);
                         return s;
                     });
+                    
                 }
                 finally
                 {
                     foreach (var s in stores)
                         s.Dispose();
                     stores.Clear();
+
+                    if (File.Exists(fileName))
+                        File.Delete(fileName);
                 }
         }
     }

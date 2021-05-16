@@ -69,6 +69,9 @@ namespace FileContainer
                 return PutAppendResult.Created;
             }
 
+            if (Header.Flags.HasFlag(PersistentContainerFlags.Compressed))
+                throw new NotSupportedException("Compressed container unsupported operation: Append");
+
             var userDataAtLastPage = existingEntry.Length % Header.PageUserDataSize; // rest of data on last page
             Stream.Position = existingEntry.LastPage * Header.PageSize + userDataAtLastPage;
 
@@ -95,7 +98,11 @@ namespace FileContainer
                 else lastPage = existingEntry.LastPage;
             }
 
-            entries.Update(existingEntry, existingEntry.FirstPage, lastPage, existingEntry.Length + data.Length);
+            entries.Update(existingEntry,
+                           existingEntry.FirstPage, lastPage,
+                           existingEntry.Length + data.Length,
+                           existingEntry.Length + data.Length,
+                           0);
             return PutAppendResult.Updated;
         }
     }
