@@ -73,9 +73,9 @@ namespace FileContainer
             {
                 var compressedData              = Header.DataHandler.Pack(data);
                 var compressedDataRequiredPages = Header.GetRequiredPages(compressedData.Length);
-                if (compressedDataRequiredPages >= requiredPages) // compressed data occupate same or more pages ?
+                if (compressedDataRequiredPages >= requiredPages) // compressed data >= original data?
                 {
-                    entryFlags = 0;
+                    entryFlags = 0; // no compression, write raw
                 }
                 else
                 {
@@ -101,7 +101,7 @@ namespace FileContainer
 
                     pageAllocator.FreePages(mustBeFreePages);
                     allocatedPages = newPages;
-                }
+                } // else no action - new data will written into existing pages 
 
                 Stream.WriteIntoPages(Header, data, 0, allocatedPages);
                 entries.Update(existingEntry,

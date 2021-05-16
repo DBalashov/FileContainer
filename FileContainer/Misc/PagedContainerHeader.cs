@@ -9,7 +9,7 @@ namespace FileContainer
     class PagedContainerHeader
     {
         /// <summary> header size == minimal page size </summary>
-        const int HEADER_PART = 16;
+        internal const int HEADER_PART = 16;
 
         const int SIGN = 0x78213645;
 
@@ -27,18 +27,16 @@ namespace FileContainer
 
         #region constructor
 
-        internal PagedContainerHeader(int pageSize, PersistentContainerFlags flags)
+        internal PagedContainerHeader([NotNull] PersistentContainerSettings settings)
         {
-            validatePageSize(pageSize);
-
-            PageSize         = pageSize;
-            PageUserDataSize = pageSize - 4;
-            Flags            = flags;
+            PageSize         = settings.PageSize;
+            PageUserDataSize = settings.PageSize - 4;
+            Flags            = settings.Flags;
 
             DataHandler = Flags.HasFlag(PersistentContainerFlags.Compressed) ? new GZipDataPacker() : new NoDataPacker();
         }
 
-        internal PagedContainerHeader([NotNull] Stream stm)
+        internal PagedContainerHeader([NotNull] PersistentContainerSettings settings, [NotNull] Stream stm)
         {
             if (stm.Length < HEADER_PART)
                 throw new InvalidDataException("PagedContainerHeader: File corrupted (too small)");
@@ -55,7 +53,7 @@ namespace FileContainer
 
             PageSize         = buff.GetInt(ref offset); // 4 byte
             PageUserDataSize = PageSize - 4;
-            validatePageSize(PageSize);
+            Extenders.ValidatePageSize(PageSize);
 
             DirectoryFirstPage = buff.GetInt(ref offset); // 4 byte
             if (DirectoryFirstPage < 0)
@@ -67,17 +65,6 @@ namespace FileContainer
         }
 
         #endregion
-
-        void validatePageSize(int pageSize)
-        {
-            switch (pageSize)
-            {
-                case < HEADER_PART:
-                    throw new ArgumentException($"PagedContainerHeader: PageSize must be >= {HEADER_PART} bytes (passed {pageSize} bytes)");
-                case > 128 * 1024:
-                    throw new ArgumentException($"PagedContainerHeader: PageSize must be <= 128 KB (passed {pageSize} bytes)");
-            }
-        }
 
         public void Write([NotNull] Stream stm)
         {

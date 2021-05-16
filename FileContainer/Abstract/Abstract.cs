@@ -29,14 +29,15 @@ namespace FileContainer
 
         #region constructor / dispose
 
-        protected PagedContainerAbstract([NotNull] Stream stm, int pageSize = 4096, PersistentContainerFlags flags = 0)
+        protected PagedContainerAbstract([NotNull] Stream stm, PersistentContainerSettings settings = null)
         {
-            Stream = stm;
+            Stream   =   stm;
+            settings ??= new PersistentContainerSettings();
             try
             {
                 if (stm.Length == 0) // new file
                 {
-                    Header = new PagedContainerHeader(pageSize, flags);
+                    Header = new PagedContainerHeader(settings);
                     Header.Write(stm);
 
                     pageAllocator = new PageAllocator(Header);
@@ -44,7 +45,7 @@ namespace FileContainer
                 }
                 else
                 {
-                    Header        = new PagedContainerHeader(stm);
+                    Header        = new PagedContainerHeader(settings, stm);
                     pageAllocator = new PageAllocator(Header, stm);
                 }
 

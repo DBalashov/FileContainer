@@ -8,11 +8,11 @@ namespace FileContainer
     {
         readonly bool externalMemoryStream = false;
 
-        public InMemoryContainer(int pageSize = 4096, PersistentContainerFlags flags = 0) : base(new MemoryStream(), pageSize, flags)
+        public InMemoryContainer(PersistentContainerSettings settings = null) : base(new MemoryStream(), settings)
         {
         }
 
-        public InMemoryContainer([NotNull] MemoryStream stm, int pageSize = 4096, PersistentContainerFlags flags = 0) : base(stm, pageSize, flags) =>
+        public InMemoryContainer([NotNull] MemoryStream stm, PersistentContainerSettings settings = null) : base(stm, settings) =>
             externalMemoryStream = true;
 
         protected override void DisposeStream()

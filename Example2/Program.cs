@@ -14,7 +14,7 @@ namespace Example2
                 File.Delete(fileName);
 
             const int maxItems = 1000;
-            using (var pc = new PersistentContainer(fileName, 256))
+            using (var pc = new PersistentContainer(fileName, new PersistentContainerSettings(256)))
             {
                 // write 0000/item0, 0000/item1, 0000/item2, ..., 0001/item10, 0001/item11, ..., 0002/item10, 0002/item21,
                 foreach (var itemId in Enumerable.Range(0, maxItems))
@@ -24,7 +24,7 @@ namespace Example2
                 }
             }
             
-            using (var pc = new PersistentContainer(fileName, 256))
+            using (var pc = new PersistentContainer(fileName, new PersistentContainerSettings(256)))
             {
                 Console.WriteLine("File length: {0} bytes, entries: {1}", pc.Length, pc.Find().Length);
                 Console.WriteLine();

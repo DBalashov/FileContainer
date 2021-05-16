@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using CommandLine;
+using FileContainer;
 
 namespace FCLI
 {
@@ -11,7 +12,7 @@ namespace FCLI
             if (File.Exists(parms.FileName))
                 File.Delete(parms.FileName);
 
-            using var c = new FileContainer.PersistentContainer(parms.FileName, parms.PageSize);
+            using var c = new FileContainer.PersistentContainer(parms.FileName, new PersistentContainerSettings(parms.PageSize));
             Console.WriteLine("Created: {0}", parms.FileName);
         }
     }

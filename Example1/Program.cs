@@ -12,7 +12,7 @@ namespace Example1
             if (File.Exists(fileName))
                 File.Delete(fileName);
 
-            using (var pc = new PersistentContainer(fileName, 256))
+            using (var pc = new PersistentContainer(fileName, new PersistentContainerSettings(256)))
             {
                 pc.Put("item1", "Hello");
                 pc.Put("item2", "User");
@@ -27,7 +27,7 @@ namespace Example1
                 pc.Put("item3", "another item");
             }
 
-            using (var pc = new PersistentContainer(fileName, 256))
+            using (var pc = new PersistentContainer(fileName, new PersistentContainerSettings(256)))
             {
                 var entries = pc.Find();
                 foreach (var entry in entries)

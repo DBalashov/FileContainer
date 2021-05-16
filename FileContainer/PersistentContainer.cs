@@ -38,8 +38,8 @@ namespace FileContainer
     /// </summary>
     public class PersistentContainer : PagedContainerAbstract
     {
-        public PersistentContainer([NotNull] string fileName, int pageSize = 4096, PersistentContainerFlags flags = 0) :
-            base(new FileStream(fileName, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.None, pageSize * 2), pageSize, flags)
+        public PersistentContainer([NotNull] string fileName, PersistentContainerSettings settings = null) :
+            base(new FileStream(fileName, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.None, (settings?.PageSize ?? 4096) * 2), settings)
         {
         }
     }
@@ -48,6 +48,7 @@ namespace FileContainer
     public enum PersistentContainerFlags
     {
         WriteDirImmediately = 1,
-        Compressed          = 2
+        Compressed          = 2,
+        Encrypted           = 4
     }
 }

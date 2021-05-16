@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Linq;
+using System.Security.Cryptography;
 using FileContainer;
 
 namespace Dev
@@ -16,7 +17,7 @@ namespace Dev
             var text = string.Join(Environment.NewLine, Enumerable.Range(0, 15).Select(p => $"Hello, line #{p}, Текст, κείμενο, ਟੈਕਸਟ, random guid: {Guid.NewGuid()}"));
 
             const int maxItems = 1000;
-            using (var pc = new PersistentContainer(fileName, 256, PersistentContainerFlags.Compressed))
+            using (var pc = new PersistentContainer(fileName, new PersistentContainerSettings(256, PersistentContainerFlags.Compressed)))
             {
                 foreach (var itemId in Enumerable.Range(0, maxItems))
                 {
@@ -25,7 +26,7 @@ namespace Dev
                 }
             }
 
-            using (var pc = new PersistentContainer(fileName, 256))
+            using (var pc = new PersistentContainer(fileName, new PersistentContainerSettings(256)))
             {
                 Console.WriteLine("File length: {0} bytes, entries: {1}", pc.Length, pc.Find().Length);
                 Console.WriteLine();

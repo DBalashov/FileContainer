@@ -12,7 +12,7 @@ namespace FileContainer
     static class Extenders
     {
         static readonly Encoding defaultEncoding = Encoding.UTF8;
-        
+
         /// <summary>
         /// Read UTF-8 string from buff starting with offset
         /// string must be stored as [ushort length][utf-8 bytes]
@@ -53,8 +53,19 @@ namespace FileContainer
             offset += 4;
             return r;
         }
-        
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal static bool ContainMask([NotNull] this string name) => name.Contains("*") || name.Contains("?");
+
+        internal static void ValidatePageSize(int pageSize)
+        {
+            switch (pageSize)
+            {
+                case < PagedContainerHeader.HEADER_PART:
+                    throw new ArgumentException($"PagedContainerHeader: PageSize must be >= {PagedContainerHeader.HEADER_PART} bytes (passed {pageSize} bytes)");
+                case > 128 * 1024:
+                    throw new ArgumentException($"PagedContainerHeader: PageSize must be <= 128 KB (passed {pageSize} bytes)");
+            }
+        }
     }
 }

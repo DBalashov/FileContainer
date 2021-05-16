@@ -70,7 +70,7 @@ namespace Benchmark
                     File.Delete(targetFileName);
 
                 var sw = Stopwatch.StartNew();
-                using (var container = new PersistentContainer(targetFileName, pageSize, flags))
+                using (var container = new PersistentContainer(targetFileName,new PersistentContainerSettings( pageSize, flags)))
                     foreach (var file in extractedFiles)
                         container.Put(file.Key, file.Value);
 
@@ -106,7 +106,7 @@ namespace Benchmark
                     File.Delete(targetFileName);
 
                 var sw = Stopwatch.StartNew();
-                using (var container = new PersistentContainer(targetFileName, pageSize, flags))
+                using (var container = new PersistentContainer(targetFileName, new PersistentContainerSettings(pageSize, flags)))
                     foreach (var item in items)
                         container.Put(item);
 
@@ -117,7 +117,7 @@ namespace Benchmark
                 sw.Restart();
                 var rawLength        = 0;
                 var compressedLength = 0;
-                using (var container = new PersistentContainer(targetFileName, pageSize, flags))
+                using (var container = new PersistentContainer(targetFileName, new PersistentContainerSettings(pageSize, flags)))
                 {
                     foreach (var entry in container.Find())
                     {
