@@ -28,8 +28,8 @@ namespace FileContainer
 
         public PageAllocator([NotNull] PagedContainerHeader header)
         {
-            this.header        = header;
-            
+            this.header = header;
+
             pageAllocations    = new ExpandableBitArray(2);
             pageAllocations[0] = true;
             pageAllocations[1] = true;
@@ -39,41 +39,21 @@ namespace FileContainer
         {
             this.header = header;
 
-            var buff          = stm.ReadWithPageSequence(header, FIRST_PA_PAGE).Data;
-            if (header.Flags.HasFlag(PersistentContainerFlags.Compressed))
-                buff = buff.GZipUnpack();
-            
-            var realByteCount = BitConverter.ToInt32(buff, 0);
-            var newBuffer     = new byte[realByteCount];
-            Buffer.BlockCopy(buff, 4, newBuffer, 0, newBuffer.Length);
-
-            pageAllocations = new ExpandableBitArray(newBuffer);
-        }
-
-        [NotNull]
-        byte[] getPageAllocatorBytes()
-        {
-            var buff      = pageAllocations.GetBytes();
-            var newBuffer = new byte[buff.Length + 4];
-            Array.Copy(BitConverter.GetBytes(buff.Length), 0, newBuffer, 0, 4);
-            Array.Copy(buff, 0, newBuffer, 4, buff.Length);
-            
-            if (header.Flags.HasFlag(PersistentContainerFlags.Compressed))
-                newBuffer = newBuffer.GZipPack();
-
-            return newBuffer;
+            var buff = stm.ReadWithPageSequence(header, FIRST_PA_PAGE).Data;
+            buff            = header.DataHandler.Unpack(buff);
+            pageAllocations = new ExpandableBitArray(buff);
         }
 
         /// <summary> записывает содержимое PA в stm, при необходимости - перед этим выделяя страницы и для себя тоже </summary>
         public void Write([NotNull] Stream stm)
         {
-            var buff           = getPageAllocatorBytes();
+            var buff           = header.DataHandler.Pack(pageAllocations.GetBytes());
             var allocatedPages = stm.ReadPageSequence(header, FIRST_PA_PAGE).ToList();
             var requiredPages  = header.GetRequiredPages(buff.Length);
             while (requiredPages > allocatedPages.Count)
             {
                 allocatedPages.AddRange(AllocatePages(requiredPages - allocatedPages.Count));
-                buff          = getPageAllocatorBytes(); // serialize to buffer and check again - need to more pages?
+                buff          = header.DataHandler.Pack(pageAllocations.GetBytes()); // serialize to buffer and check again - need to more pages?
                 requiredPages = header.GetRequiredPages(buff.Length);
             }
 

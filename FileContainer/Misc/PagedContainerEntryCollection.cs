@@ -9,7 +9,8 @@ namespace FileContainer
     class PagedContainerEntryCollection
     {
         [NotNull] readonly Dictionary<string, PagedContainerEntry> entries;
-        [NotNull]          int[]                                   pages;
+
+        [NotNull] int[] pages;
 
         public bool Modified { get; private set; }
 
@@ -23,11 +24,7 @@ namespace FileContainer
 
         internal PagedContainerEntryCollection([NotNull] PagedContainerHeader header, PageSequence ps)
         {
-            var buff = ps.Data;
-            if (header.Flags.HasFlag(PersistentContainerFlags.Compressed))
-                buff = buff.GZipUnpack();
-
-            entries  = PagedContainerEntry.Unpack(buff).ToDictionary(p => p.Name, StringComparer.InvariantCultureIgnoreCase);
+            entries  = ps.Data.ReadEntries(header.DataHandler);
             pages    = ps.Pages;
             Modified = false;
         }
@@ -40,9 +37,7 @@ namespace FileContainer
         {
             var targetPages = pages;
 
-            var buff = PagedContainerEntry.Pack(entries.Values.ToArray());
-            if (header.Flags.HasFlag(PersistentContainerFlags.Compressed))
-                buff = buff.GZipPack();
+            var buff = entries.WriteEntries(header.DataHandler);
 
             var requiredPages = header.GetRequiredPages(buff.Length);
 
@@ -70,6 +65,8 @@ namespace FileContainer
 
         #endregion
 
+        #region TryGet / Add / Remove / Update
+
         public bool TryGet([NotNull] string key, out PagedContainerEntry item) =>
             string.IsNullOrEmpty(key)
                 ? throw new ArgumentException("Argument can't be null or empty", nameof(key))
@@ -87,6 +84,7 @@ namespace FileContainer
 
             entries.Remove(entry.Name);
             Modified = true;
+
             return true;
         }
 
@@ -99,6 +97,8 @@ namespace FileContainer
 
             Modified = true;
         }
+
+        #endregion
 
         /// <exception cref="ArgumentException"></exception>
         [NotNull]

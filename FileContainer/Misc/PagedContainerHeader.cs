@@ -23,6 +23,10 @@ namespace FileContainer
         /// <summary> first page index of entries directory. 0 for new files, will updated after adding first entry </summary>
         public int DirectoryFirstPage;
 
+        [NotNull] public IDataHandler DataHandler;
+
+        #region constructor
+
         internal PagedContainerHeader(int pageSize, PersistentContainerFlags flags)
         {
             validatePageSize(pageSize);
@@ -30,6 +34,8 @@ namespace FileContainer
             PageSize         = pageSize;
             PageUserDataSize = pageSize - 4;
             Flags            = flags;
+
+            DataHandler = Flags.HasFlag(PersistentContainerFlags.Compressed) ? new GZipDataPacker() : new NoDataPacker();
         }
 
         internal PagedContainerHeader([NotNull] Stream stm)
@@ -56,7 +62,11 @@ namespace FileContainer
                 throw new InvalidDataException($"PagedContainerHeader: DirectoryFirstPage has invalid value ({DirectoryFirstPage})");
 
             Flags = (PersistentContainerFlags) buff.GetInt(ref offset);
+
+            DataHandler = Flags.HasFlag(PersistentContainerFlags.Compressed) ? new GZipDataPacker() : new NoDataPacker();
         }
+
+        #endregion
 
         void validatePageSize(int pageSize)
         {
