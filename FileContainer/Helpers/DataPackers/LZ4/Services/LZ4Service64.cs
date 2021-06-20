@@ -26,9 +26,11 @@ IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #endregion
 
 using System;
+using System.Diagnostics.CodeAnalysis;
 
 namespace LZ4
 {
+    [ExcludeFromCodeCoverage]
     partial class LZ4Service64 : LZ4ServiceBase, ILZ4Service
     {
         protected static readonly int[] DECODER_TABLE_64 = { 0, 0, 0, -1, 0, 1, 2, 3 };

@@ -69,7 +69,7 @@ namespace FileContainer
                 return PutAppendResult.Created;
             }
 
-            if (Header.Flags.HasFlag(PersistentContainerFlags.Compressed))
+            if (Header.CompressType != PersistentContainerCompressType.None)
                 throw new NotSupportedException("Compressed container unsupported operation: Append");
 
             var userDataAtLastPage = existingEntry.Length % Header.PageUserDataSize; // rest of data on last page

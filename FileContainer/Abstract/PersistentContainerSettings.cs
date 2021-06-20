@@ -14,7 +14,7 @@ namespace FileContainer
 
         public PersistentContainerSettings(int                             pageSize     = 4096,
                                            PersistentContainerFlags        flags        = 0,
-                                           PersistentContainerCompressType compressType = PersistentContainerCompressType.GZip)
+                                           PersistentContainerCompressType compressType = PersistentContainerCompressType.None)
         {
             Extenders.ValidatePageSize(pageSize);
 

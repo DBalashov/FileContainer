@@ -12,12 +12,16 @@ namespace FileContainer.Encrypt
 
         public byte[] Encrypt(byte[] data)
         {
-            using var stm       = new MemoryStream();
-            using var encryptor = algo.CreateEncryptor();
-            using var cs        = new CryptoStream(stm, encryptor, CryptoStreamMode.Write);
-            cs.Write(data, 0, data.Length);
-            cs.FlushFinalBlock();
-            return stm.ToArray();
+            using (var stm = new MemoryStream())
+            using (var encryptor = algo.CreateEncryptor())
+            using (var cs = new CryptoStream(stm, encryptor, CryptoStreamMode.Write))
+            {
+                cs.Write(data, 0, data.Length);
+                cs.FlushFinalBlock();
+                data = stm.ToArray();
+            }
+
+            return data;
         }
 
         public byte[] Decrypt(byte[] data)

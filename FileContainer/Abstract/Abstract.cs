@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using JetBrains.Annotations;
@@ -130,5 +131,8 @@ namespace FileContainer
             [CanBeNull] get => Get(key);
             [NotNull] set => Put(key, value);
         }
+
+        [ExcludeFromCodeCoverage]
+        public override string ToString() => $"{Header}, Entries: {entries}, Length={Length}";
     }
 }

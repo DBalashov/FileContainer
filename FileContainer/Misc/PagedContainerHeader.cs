@@ -19,7 +19,8 @@ namespace FileContainer
 
         public readonly int PageUserDataSize;
 
-        public readonly PersistentContainerFlags Flags;
+        public readonly PersistentContainerFlags        Flags;
+        public readonly PersistentContainerCompressType CompressType;
 
         /// <summary> first page index of entries directory. 0 for new files, will updated after adding first entry </summary>
         public int DirectoryFirstPage;
@@ -33,7 +34,8 @@ namespace FileContainer
             PageSize         = settings.PageSize;
             PageUserDataSize = settings.PageSize - 4;
             Flags            = settings.Flags;
-            DataHandler      = getDataHandler(Flags, settings.CompressType, settings.encryptorDecryptor);
+            CompressType     = settings.CompressType;
+            DataHandler      = getDataHandler(settings.CompressType, settings.encryptorDecryptor);
         }
 
         internal PagedContainerHeader([NotNull] Stream stm, [NotNull] IEncryptorDecryptor encryptorDecryptor)
@@ -59,24 +61,22 @@ namespace FileContainer
             if (DirectoryFirstPage < 0)
                 throw new InvalidDataException($"PagedContainerHeader: DirectoryFirstPage has invalid value ({DirectoryFirstPage})");
 
-            var flags = buff.GetInt(ref offset);
+            Flags = (PersistentContainerFlags)(buff.GetUInt16(ref offset) & 0xFFFF);
 
-            // 0-15  bits: PersistentContainerFlags
-            // 16-19 bits: compress type (if PersistentContainerFlags.Compressed)
-            Flags       = (PersistentContainerFlags)(flags & 0xFFFF);
-            DataHandler = getDataHandler(Flags, (PersistentContainerCompressType)((flags >> 16) & 0b1111), encryptorDecryptor);
+            var flagsData = buff[offset];
+            CompressType = (PersistentContainerCompressType)flagsData;
+            DataHandler  = getDataHandler(CompressType, encryptorDecryptor);
         }
 
         [NotNull]
-        IDataHandler getDataHandler(PersistentContainerFlags flags, PersistentContainerCompressType compressType, [NotNull] IEncryptorDecryptor encryptorDecryptor) =>
-            flags.HasFlag(PersistentContainerFlags.Compressed)
-                ? compressType switch
-                {
-                    PersistentContainerCompressType.GZip => new GZipDataPacker(encryptorDecryptor),
-                    PersistentContainerCompressType.LZ4 => new LZ4DataPacker(encryptorDecryptor),
-                    _ => throw new InvalidDataException("Unsupported compress type: " + compressType)
-                }
-                : new NoDataPacker(encryptorDecryptor);
+        IDataHandler getDataHandler(PersistentContainerCompressType compressType, [NotNull] IEncryptorDecryptor encryptorDecryptor) =>
+            compressType switch
+            {
+                PersistentContainerCompressType.None => new NoDataPacker(encryptorDecryptor),
+                PersistentContainerCompressType.GZip => new GZipDataPacker(encryptorDecryptor),
+                PersistentContainerCompressType.LZ4 => new LZ4DataPacker(encryptorDecryptor),
+                _ => throw new InvalidDataException("Unsupported compress type: " + compressType)
+            };
 
         #endregion
 
@@ -88,16 +88,18 @@ namespace FileContainer
             bw.Write(SIGN);               // 4 byte
             bw.Write(PageSize);           // 4 byte
             bw.Write(DirectoryFirstPage); // 4 byte
-            bw.Write((int)Flags);         // 4 byte
+
+            bw.Write((ushort)((int)Flags & 0xFFFF)); // 2 byte
+
+            bw.Write((byte)((int)CompressType & 0xFF)); // 1 byte
+            bw.Write(0);                                // 1 byte
         }
 
         /// <summary> return required page count for store lengthInBytes (including internal data size at end of each page) </summary>
         public int GetRequiredPages(int lengthInBytes) =>
             (int)Math.Ceiling(lengthInBytes / (double)PageUserDataSize);
 
-#if DEBUG
         [ExcludeFromCodeCoverage]
-        public override string ToString() => $"PageSize: {PageSize}";
-#endif
+        public override string ToString() => $"PageSize: {PageSize}, Flags: {Flags}, CompressType: {CompressType}";
     }
 }

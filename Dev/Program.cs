@@ -21,13 +21,14 @@ namespace Dev
             //     var z2 = cc.Decrypt(b);
             // }
 
-            var aes      = Aes.Create();
+            var aes = Rijndael.Create();
+
             var fileName = Path.Combine(@"D:\test2.container");
             if (File.Exists(fileName))
                 File.Delete(fileName);
-            
+
             var text = string.Join(Environment.NewLine, Enumerable.Range(0, 15).Select(p => $"Hello, line #{p}, Текст, κείμενο, ਟੈਕਸਟ, random guid: {Guid.NewGuid()}"));
-            
+
             const int maxItems = 1000;
             using (var pc = new PersistentContainer(fileName, new PersistentContainerSettings(256).With(aes)))
             {
@@ -42,7 +43,7 @@ namespace Dev
             {
                 Console.WriteLine("File length: {0} bytes, entries: {1}", pc.Length, pc.Find().Length);
                 Console.WriteLine();
-            
+
                 var mask    = "/004?/*";
                 var entries = pc.Find(mask);
                 Console.WriteLine("Found {0} items with mask: {1}, show first 10:", entries.Length, mask);
@@ -54,7 +55,7 @@ namespace Dev
             }
         }
     }
-    
+
     class Symmetric
     {
         readonly SymmetricAlgorithm algo;

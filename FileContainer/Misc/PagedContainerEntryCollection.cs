@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using JetBrains.Annotations;
@@ -17,7 +18,7 @@ namespace FileContainer
         internal PagedContainerEntryCollection()
         {
             entries = new Dictionary<string, PagedContainerEntry>();
-            pages   = new int[0];
+            pages   = Array.Empty<int>();
         }
 
         #region Read / Write
@@ -131,8 +132,7 @@ namespace FileContainer
         [NotNull]
         public IEnumerable<PagedContainerEntry> All() => entries.Values.ToArray();
 
-#if DEBUG
+        [ExcludeFromCodeCoverage]
         public override string ToString() => $"Pages: {pages.Length}, Entries: {entries.Count}";
-#endif
     }
 }

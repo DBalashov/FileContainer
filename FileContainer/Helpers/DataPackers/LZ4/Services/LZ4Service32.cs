@@ -26,9 +26,11 @@ IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #endregion
 
 using System;
+using System.Diagnostics.CodeAnalysis;
 
 namespace LZ4
 {
+    [ExcludeFromCodeCoverage]
     partial class LZ4Service32 : LZ4ServiceBase, ILZ4Service
     {
         const int STEPSIZE_32 = 4;

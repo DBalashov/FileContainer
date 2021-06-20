@@ -1,8 +1,10 @@
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 
 namespace LZ4
 {
+    [ExcludeFromCodeCoverage]
     abstract class LZ4ServiceBase
     {
         #region consts

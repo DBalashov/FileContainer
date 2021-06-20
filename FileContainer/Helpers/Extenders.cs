@@ -24,21 +24,19 @@ namespace FileContainer
             var nameLength = BitConverter.ToUInt16(buff, offset);
             offset += 2;
 
-            if (nameLength > 0)
-            {
-                var r = defaultEncoding.GetString(buff, offset, nameLength);
-                offset += nameLength;
-                return r;
-            }
+            if (nameLength <= 0)
+                return "";
 
-            return "";
+            var r = defaultEncoding.GetString(buff, offset, nameLength);
+            offset += nameLength;
+            return r;
         }
 
         [NotNull]
         internal static BinaryWriter PutString([NotNull] this BinaryWriter bw, string value)
         {
             var b = defaultEncoding.GetBytes(value);
-            bw.Write((ushort) b.Length);
+            bw.Write((ushort)b.Length);
             if (b.Length > 0)
                 bw.Write(b, 0, b.Length);
             return bw;
@@ -51,6 +49,16 @@ namespace FileContainer
         {
             var r = BitConverter.ToInt32(buff, offset);
             offset += 4;
+            return r;
+        }
+
+        /// <summary> read 16 bit unsigned int from buff starting with offset. Offset will forward to 2 bytes </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        [DebuggerStepThrough]
+        internal static ushort GetUInt16([NotNull] this byte[] buff, ref int offset)
+        {
+            var r = BitConverter.ToUInt16(buff, offset);
+            offset += 2;
             return r;
         }
 

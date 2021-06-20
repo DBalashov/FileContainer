@@ -47,13 +47,13 @@ namespace FileContainer
     [Flags]
     public enum PersistentContainerFlags
     {
-        WriteDirImmediately = 1,
-        Compressed          = 2
+        WriteDirImmediately = 1
     }
 
     public enum PersistentContainerCompressType
     {
-        GZip = 0,
-        LZ4  = 1
+        None = 0,
+        GZip = 1,
+        LZ4  = 2
     }
 }

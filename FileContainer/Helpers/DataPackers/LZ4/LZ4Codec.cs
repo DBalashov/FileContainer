@@ -26,12 +26,14 @@ IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #endregion
 
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using System.Text;
 
 namespace LZ4
 {
-    public static class LZ4Codec
+    [ExcludeFromCodeCoverage]
+    static class LZ4Codec
     {
         internal static readonly ILZ4Service Encoder;
         internal static readonly ILZ4Service Decoder;

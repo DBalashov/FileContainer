@@ -41,7 +41,7 @@ namespace FileContainer.Tests
 
                     action(() =>
                     {
-                        var s = new PersistentContainer(fileName, new PersistentContainerSettings(pageSize, flags));
+                        var s = new PersistentContainer(fileName, new PersistentContainerSettings(pageSize, flags, compressType));
                         stores.Add(s);
                         return s;
                     });
@@ -50,7 +50,7 @@ namespace FileContainer.Tests
                     var stm = new MemoryStream();
                     action(() =>
                     {
-                        var s = new InMemoryContainer(stm, new PersistentContainerSettings(pageSize, flags));
+                        var s = new InMemoryContainer(stm, new PersistentContainerSettings(pageSize, flags, compressType));
                         stores.Add(s);
                         return s;
                     });

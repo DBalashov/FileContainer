@@ -1,8 +1,6 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
-using System.Text;
 using JetBrains.Annotations;
 
 namespace FileContainer
@@ -68,7 +66,7 @@ namespace FileContainer
             data = Header.DataHandler.Pack(data);
 
             var requiredPages = Header.GetRequiredPages(data.Length);
-            var entryFlags    = Header.Flags.HasFlag(PersistentContainerFlags.Compressed) ? EntryFlags.Compressed : 0;
+            var entryFlags    = Header.CompressType != PersistentContainerCompressType.None ? EntryFlags.Compressed : 0;
 
             if (entries.TryGet(key, out var existingEntry))
             {
