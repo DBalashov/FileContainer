@@ -33,12 +33,10 @@ namespace FileContainer
             PageSize         = settings.PageSize;
             PageUserDataSize = settings.PageSize - 4;
             Flags            = settings.Flags;
-            DataHandler = Flags.HasFlag(PersistentContainerFlags.Compressed)
-                ? new GZipDataPacker(settings.encryptorDecryptor)
-                : new NoDataPacker(settings.encryptorDecryptor);
+            DataHandler      = getDataHandler(Flags, settings.CompressType, settings.encryptorDecryptor);
         }
 
-        internal PagedContainerHeader([NotNull] PersistentContainerSettings settings, [NotNull] Stream stm)
+        internal PagedContainerHeader([NotNull] Stream stm, [NotNull] IEncryptorDecryptor encryptorDecryptor)
         {
             if (stm.Length < HEADER_PART)
                 throw new InvalidDataException("PagedContainerHeader: File corrupted (too small)");
@@ -61,11 +59,24 @@ namespace FileContainer
             if (DirectoryFirstPage < 0)
                 throw new InvalidDataException($"PagedContainerHeader: DirectoryFirstPage has invalid value ({DirectoryFirstPage})");
 
-            Flags = (PersistentContainerFlags) buff.GetInt(ref offset);
-            DataHandler = Flags.HasFlag(PersistentContainerFlags.Compressed)
-                ? new GZipDataPacker(settings.encryptorDecryptor)
-                : new NoDataPacker(settings.encryptorDecryptor);
+            var flags = buff.GetInt(ref offset);
+
+            // 0-15  bits: PersistentContainerFlags
+            // 16-19 bits: compress type (if PersistentContainerFlags.Compressed)
+            Flags       = (PersistentContainerFlags)(flags & 0xFFFF);
+            DataHandler = getDataHandler(Flags, (PersistentContainerCompressType)((flags >> 16) & 0b1111), encryptorDecryptor);
         }
+
+        [NotNull]
+        IDataHandler getDataHandler(PersistentContainerFlags flags, PersistentContainerCompressType compressType, [NotNull] IEncryptorDecryptor encryptorDecryptor) =>
+            flags.HasFlag(PersistentContainerFlags.Compressed)
+                ? compressType switch
+                {
+                    PersistentContainerCompressType.GZip => new GZipDataPacker(encryptorDecryptor),
+                    PersistentContainerCompressType.LZ4 => new LZ4DataPacker(encryptorDecryptor),
+                    _ => throw new InvalidDataException("Unsupported compress type: " + compressType)
+                }
+                : new NoDataPacker(encryptorDecryptor);
 
         #endregion
 
@@ -77,12 +88,12 @@ namespace FileContainer
             bw.Write(SIGN);               // 4 byte
             bw.Write(PageSize);           // 4 byte
             bw.Write(DirectoryFirstPage); // 4 byte
-            bw.Write((int) Flags);        // 4 byte
+            bw.Write((int)Flags);         // 4 byte
         }
 
         /// <summary> return required page count for store lengthInBytes (including internal data size at end of each page) </summary>
         public int GetRequiredPages(int lengthInBytes) =>
-            (int) Math.Ceiling(lengthInBytes / (double) PageUserDataSize);
+            (int)Math.Ceiling(lengthInBytes / (double)PageUserDataSize);
 
 #if DEBUG
         [ExcludeFromCodeCoverage]

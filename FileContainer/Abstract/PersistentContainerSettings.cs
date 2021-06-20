@@ -6,23 +6,22 @@ namespace FileContainer
 {
     public class PersistentContainerSettings
     {
-        public readonly int                      PageSize;
-        public readonly PersistentContainerFlags Flags;
+        public readonly int                             PageSize;
+        public readonly PersistentContainerFlags        Flags;
+        public readonly PersistentContainerCompressType CompressType;
 
         internal IEncryptorDecryptor encryptorDecryptor = new EncryptorDecryptorStub();
 
-        public PersistentContainerSettings(int pageSize = 4096, PersistentContainerFlags flags = 0)
+        public PersistentContainerSettings(int                             pageSize     = 4096,
+                                           PersistentContainerFlags        flags        = 0,
+                                           PersistentContainerCompressType compressType = PersistentContainerCompressType.GZip)
         {
             Extenders.ValidatePageSize(pageSize);
 
-            PageSize = pageSize;
-            Flags    = flags;
+            PageSize     = pageSize;
+            Flags        = flags;
+            CompressType = compressType;
         }
-
-        // public PersistentContainerSettings With(AsymmetricAlgorithm encryptor)
-        // {
-        //     return this;
-        // }
 
         public PersistentContainerSettings With(SymmetricAlgorithm algo)
         {

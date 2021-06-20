@@ -105,9 +105,7 @@ namespace FileContainer.Tests
             DoIt(factory =>
             {
                 using (var store = factory())
-                {
                     store.Put(getRandomBlocks(store.PageSize));
-                }
 
                 using (var store = factory())
                 {

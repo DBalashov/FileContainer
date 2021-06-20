@@ -45,7 +45,7 @@ namespace FileContainer
                 }
                 else
                 {
-                    Header        = new PagedContainerHeader(settings, stm);
+                    Header        = new PagedContainerHeader(stm, settings.encryptorDecryptor);
                     pageAllocator = new PageAllocator(Header, stm);
                 }
 

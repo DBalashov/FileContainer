@@ -39,6 +39,12 @@
       <Compile Update="Writes.WriteImmediately.cs">
         <DependentUpon>Writes.cs</DependentUpon>
       </Compile>
+      <Compile Update="Delete.WriteImmediately.cs">
+        <DependentUpon>Delete.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Reads.WriteImmediately.cs">
+        <DependentUpon>Reads.cs</DependentUpon>
+      </Compile>
     </ItemGroup>
 
 </Project>

@@ -1,4 +1,3 @@
-using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
 using FileContainer.Encrypt;
@@ -6,27 +5,6 @@ using JetBrains.Annotations;
 
 namespace FileContainer
 {
-    interface IDataHandler
-    {
-        [DebuggerStepThrough]
-        [NotNull]
-        byte[] Pack([NotNull] byte[] data);
-
-        [DebuggerStepThrough]
-        [NotNull]
-        byte[] Unpack([NotNull] byte[] data);
-    }
-
-    class NoDataPacker : IDataHandler
-    {
-        [NotNull] readonly IEncryptorDecryptor encryptorDecryptor;
-
-        internal NoDataPacker([NotNull] IEncryptorDecryptor encryptorDecryptor) => this.encryptorDecryptor = encryptorDecryptor;
-
-        public byte[] Pack(byte[]   data) => encryptorDecryptor.Encrypt(data);
-        public byte[] Unpack(byte[] data) => encryptorDecryptor.Decrypt(data);
-    }
-
     class GZipDataPacker : IDataHandler
     {
         readonly byte[] buff = new byte[8192];

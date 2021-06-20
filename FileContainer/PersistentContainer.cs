@@ -50,4 +50,10 @@ namespace FileContainer
         WriteDirImmediately = 1,
         Compressed          = 2
     }
+
+    public enum PersistentContainerCompressType
+    {
+        GZip = 0,
+        LZ4  = 1
+    }
 }

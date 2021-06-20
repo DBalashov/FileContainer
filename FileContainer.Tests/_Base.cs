@@ -9,7 +9,7 @@ namespace FileContainer.Tests
     {
         static readonly Random r = new(Guid.NewGuid().GetHashCode());
 
-        protected byte[] getRandomBytes(int count) => Enumerable.Range(0, count).Select(p => (byte) r.Next(255)).ToArray();
+        protected byte[] getRandomBytes(int count) => Enumerable.Range(0, count).Select(p => (byte)r.Next(255)).ToArray();
 
         protected Dictionary<string, byte[]> getRandomBlocks(int pageSize) =>
             new()
@@ -30,9 +30,9 @@ namespace FileContainer.Tests
         protected string                       fileName;
         readonly  List<PagedContainerAbstract> stores = new();
 
-        protected virtual void DoIt(Action<Func<PagedContainerAbstract>> action, PersistentContainerFlags flags = 0)
+        protected virtual void DoIt(Action<Func<PagedContainerAbstract>> action, PersistentContainerFlags flags = 0, PersistentContainerCompressType compressType = 0)
         {
-            foreach (var pageSize in new[] {32, 4096}) // тест на два размера страниц (маленький и большой): 32 и 4096 байт
+            foreach (var pageSize in new[] { 32, 4096 }) // тест на два размера страниц (маленький и большой): 32 и 4096 байт
                 try
                 {
                     fileName = Path.Combine(Path.GetTempPath(), "_Reads.kv");
@@ -45,7 +45,7 @@ namespace FileContainer.Tests
                         stores.Add(s);
                         return s;
                     });
-                    
+
 
                     var stm = new MemoryStream();
                     action(() =>
@@ -54,7 +54,6 @@ namespace FileContainer.Tests
                         stores.Add(s);
                         return s;
                     });
-                    
                 }
                 finally
                 {

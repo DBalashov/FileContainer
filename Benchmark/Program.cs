@@ -13,8 +13,8 @@ namespace Benchmark
         static readonly string sourceFileName  = @"D:\sonarqube-developer-8.6.0.39681.zip";
         static readonly string targetDirectory = @"E:\";
 
-        static readonly int[] pageSizes  = {128, 256, 512, 1024, 2048, 4096, 8192, 16384, 32768, 65536};
-        static readonly int[] batchSizes = {8, 16, 32, 64, 128};
+        static readonly int[] pageSizes  = { 128, 256, 512, 1024, 2048, 4096, 8192, 16384, 32768, 65536 };
+        static readonly int[] batchSizes = { 8, 16, 32, 64, 128 };
 
         static void Main(string[] args)
         {
@@ -23,10 +23,14 @@ namespace Benchmark
             testSingleWrites(extractedFiles, 0);
             foreach (var batchSize in batchSizes)
                 testBatchWrites(extractedFiles, batchSize, 0);
-
-            testSingleWrites(extractedFiles, PersistentContainerFlags.Compressed);
+            
+            testSingleWrites(extractedFiles, PersistentContainerFlags.Compressed, PersistentContainerCompressType.GZip);
             foreach (var batchSize in batchSizes)
-                testBatchWrites(extractedFiles, batchSize, PersistentContainerFlags.Compressed);
+                testBatchWrites(extractedFiles, batchSize, PersistentContainerFlags.Compressed, PersistentContainerCompressType.GZip);
+
+            testSingleWrites(extractedFiles, PersistentContainerFlags.Compressed, PersistentContainerCompressType.LZ4);
+            foreach (var batchSize in batchSizes)
+                testBatchWrites(extractedFiles, batchSize, PersistentContainerFlags.Compressed, PersistentContainerCompressType.LZ4);
 
             foreach (var pageSize in pageSizes)
             {
@@ -57,11 +61,11 @@ namespace Benchmark
 
         #region test - single writes
 
-        static void testSingleWrites(Dictionary<string, byte[]> extractedFiles, PersistentContainerFlags flags)
+        static void testSingleWrites(Dictionary<string, byte[]> extractedFiles, PersistentContainerFlags flags, PersistentContainerCompressType compressType = 0)
         {
             var totalLengths = extractedFiles.Sum(p => p.Value.Length);
 
-            Console.WriteLine("Single requests - write [{0}]", flags);
+            Console.WriteLine("Single requests - write [{0}]", flags == 0 ? "-" : flags + "/" + compressType);
             Console.WriteLine("Page\tms\tMB\tMB/sec\tLost(%)");
             foreach (var pageSize in pageSizes)
             {
@@ -70,7 +74,7 @@ namespace Benchmark
                     File.Delete(targetFileName);
 
                 var sw = Stopwatch.StartNew();
-                using (var container = new PersistentContainer(targetFileName,new PersistentContainerSettings( pageSize, flags)))
+                using (var container = new PersistentContainer(targetFileName, new PersistentContainerSettings(pageSize, flags, compressType)))
                     foreach (var file in extractedFiles)
                         container.Put(file.Key, file.Value);
 
@@ -83,7 +87,7 @@ namespace Benchmark
                                   pageSize, sw.ElapsedMilliseconds, lengthInMB,
                                   lengthInMB / (sw.ElapsedMilliseconds / 1000.0),
                                   flags == 0
-                                      ? (((targetFileLength - totalLengths) / (double) targetFileLength) * 100).ToString("F2")
+                                      ? (((targetFileLength - totalLengths) / (double)targetFileLength) * 100).ToString("F2")
                                       : "-");
             }
         }
@@ -92,10 +96,12 @@ namespace Benchmark
 
         #region test - batch writes
 
-        static void testBatchWrites(Dictionary<string, byte[]> extractedFiles, int batchSize, PersistentContainerFlags flags)
+        static void testBatchWrites(Dictionary<string, byte[]> extractedFiles, int batchSize, PersistentContainerFlags flags, PersistentContainerCompressType compressType = 0)
         {
             Console.WriteLine();
-            Console.WriteLine("Batch requests [{0}]: {1}", flags == 0 ? "-" : flags.ToString(), batchSize);
+            Console.WriteLine("Batch requests [{0}]: {1}",
+                              flags == 0 ? "-" : flags + "/" + compressType,
+                              batchSize);
             Console.WriteLine("Page        ms     MB/sec(w)    MB/sec(r)     Ratio");
 
             var items = makeBatches(extractedFiles, batchSize);
@@ -106,7 +112,7 @@ namespace Benchmark
                     File.Delete(targetFileName);
 
                 var sw = Stopwatch.StartNew();
-                using (var container = new PersistentContainer(targetFileName, new PersistentContainerSettings(pageSize, flags)))
+                using (var container = new PersistentContainer(targetFileName, new PersistentContainerSettings(pageSize, flags, compressType)))
                     foreach (var item in items)
                         container.Put(item);
 
@@ -117,7 +123,7 @@ namespace Benchmark
                 sw.Restart();
                 var rawLength        = 0;
                 var compressedLength = 0;
-                using (var container = new PersistentContainer(targetFileName, new PersistentContainerSettings(pageSize, flags)))
+                using (var container = new PersistentContainer(targetFileName, new PersistentContainerSettings(pageSize, flags, compressType)))
                 {
                     foreach (var entry in container.Find())
                     {
@@ -135,7 +141,7 @@ namespace Benchmark
                                   pageSize, sw.ElapsedMilliseconds,
                                   lengthInMB / (elapsedWrites / 1000.0),
                                   rawLengthInMB / (elapsedRead / 1000.0),
-                                  rawLength / (double) compressedLength);
+                                  rawLength / (double)compressedLength);
             }
         }
 
