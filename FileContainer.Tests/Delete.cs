@@ -38,7 +38,7 @@ namespace FileContainer.Tests
                     Assert.IsEmpty(store.Find("dir/fileA*"));
                 }
             });
-        
+
         [Test]
         public void Delete_NonExisting_Single() =>
             DoIt(factory =>
@@ -55,7 +55,7 @@ namespace FileContainer.Tests
                     Assert.IsEmpty(r);
                 }
             });
-        
+
         [Test]
         public void Delete_NonExisting_Multi() =>
             DoIt(factory =>

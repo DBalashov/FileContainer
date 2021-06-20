@@ -2,6 +2,7 @@ using System;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Text;
+using FileContainer.Encrypt;
 using JetBrains.Annotations;
 
 namespace FileContainer
@@ -32,8 +33,9 @@ namespace FileContainer
             PageSize         = settings.PageSize;
             PageUserDataSize = settings.PageSize - 4;
             Flags            = settings.Flags;
-
-            DataHandler = Flags.HasFlag(PersistentContainerFlags.Compressed) ? new GZipDataPacker() : new NoDataPacker();
+            DataHandler = Flags.HasFlag(PersistentContainerFlags.Compressed)
+                ? new GZipDataPacker(settings.encryptorDecryptor)
+                : new NoDataPacker(settings.encryptorDecryptor);
         }
 
         internal PagedContainerHeader([NotNull] PersistentContainerSettings settings, [NotNull] Stream stm)
@@ -60,8 +62,9 @@ namespace FileContainer
                 throw new InvalidDataException($"PagedContainerHeader: DirectoryFirstPage has invalid value ({DirectoryFirstPage})");
 
             Flags = (PersistentContainerFlags) buff.GetInt(ref offset);
-
-            DataHandler = Flags.HasFlag(PersistentContainerFlags.Compressed) ? new GZipDataPacker() : new NoDataPacker();
+            DataHandler = Flags.HasFlag(PersistentContainerFlags.Compressed)
+                ? new GZipDataPacker(settings.encryptorDecryptor)
+                : new NoDataPacker(settings.encryptorDecryptor);
         }
 
         #endregion

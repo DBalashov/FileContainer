@@ -30,7 +30,7 @@ namespace FileContainer.Tests
         protected string                       fileName;
         readonly  List<PagedContainerAbstract> stores = new();
 
-        protected void DoIt(Action<Func<PagedContainerAbstract>> action)
+        protected virtual void DoIt(Action<Func<PagedContainerAbstract>> action, PersistentContainerFlags flags = 0)
         {
             foreach (var pageSize in new[] {32, 4096}) // тест на два размера страниц (маленький и большой): 32 и 4096 байт
                 try
@@ -41,7 +41,7 @@ namespace FileContainer.Tests
 
                     action(() =>
                     {
-                        var s = new PersistentContainer(fileName, new PersistentContainerSettings(pageSize));
+                        var s = new PersistentContainer(fileName, new PersistentContainerSettings(pageSize, flags));
                         stores.Add(s);
                         return s;
                     });
@@ -50,7 +50,7 @@ namespace FileContainer.Tests
                     var stm = new MemoryStream();
                     action(() =>
                     {
-                        var s = new InMemoryContainer(stm, new PersistentContainerSettings(pageSize));
+                        var s = new InMemoryContainer(stm, new PersistentContainerSettings(pageSize, flags));
                         stores.Add(s);
                         return s;
                     });

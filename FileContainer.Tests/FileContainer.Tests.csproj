@@ -17,4 +17,28 @@
       <ProjectReference Include="..\FileContainer\FileContainer.csproj" />
     </ItemGroup>
 
+    <ItemGroup>
+      <Compile Update="Delete.Compressed.cs">
+        <DependentUpon>Delete.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Finds.Compressed.cs">
+        <DependentUpon>Finds.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Reads.Compressed.cs">
+        <DependentUpon>Reads.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Writes.Compressed.cs">
+        <DependentUpon>Writes.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Append.Compressed.cs">
+        <DependentUpon>Append.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Append.WriteImmediately.cs">
+        <DependentUpon>Append.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Writes.WriteImmediately.cs">
+        <DependentUpon>Writes.cs</DependentUpon>
+      </Compile>
+    </ItemGroup>
+
 </Project>

@@ -54,7 +54,7 @@ namespace FileContainer.Tests
 
         #region expand
 
-        /// <summary> запись пакетно N байт + запись N*2 байт в эти же key </summary>
+        /// <summary> write N bytes with batch + write N*2 into same blocks </summary>
         [Test]
         public void Write_Batch_WithExpand() =>
             DoIt(factory =>
@@ -81,7 +81,7 @@ namespace FileContainer.Tests
                 }
             });
 
-        /// <summary> запись поодиночно N байт + запись N*2 байт в эти же key </summary>
+        /// <summary> write N bytes as single operations + write N*2 into same blocks </summary>
         [Test]
         public void Write_Single_WithExpand() =>
             DoIt(factory =>
@@ -114,7 +114,7 @@ namespace FileContainer.Tests
 
         #region shrink
 
-        /// <summary> запись пакетно N байт + запись N*2 байт в эти же key </summary>
+        /// <summary> write N*2 bytes with batch + write N bytes into same blocks </summary>
         [Test]
         public void Write_Batch_WithShrink() =>
             DoIt(factory =>
@@ -145,7 +145,7 @@ namespace FileContainer.Tests
                 }
             });
 
-        /// <summary> запись поодиночно N байт + запись N*2 байт в эти же key </summary>
+        /// <summary> write N*2 bytes as single operations + write N bytes into same blocks </summary>
         [Test]
         public void Write_Single_WithShrink() =>
             DoIt(factory =>

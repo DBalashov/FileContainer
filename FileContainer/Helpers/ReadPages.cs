@@ -24,7 +24,7 @@ namespace FileContainer
                 stm.Position = startFromPage * header.PageSize;
                 stm.Read(buff, 0, header.PageSize);
 
-                stmCollector.Write(buff, 0, header.PageUserDataSize); // requestLength
+                stmCollector.Write(buff, 0, header.PageUserDataSize);
                 startFromPage = BitConverter.ToInt32(buff, header.PageUserDataSize);
             }
 
@@ -37,7 +37,7 @@ namespace FileContainer
         {
             using var stmCollector = new MemoryStream(entry.Length); // todo replace with byte[]
 
-            var remainLength     = entry.Length;
+            var remainLength     = entry.Flags.HasFlag(EntryFlags.Compressed) ? entry.CompressedLength : entry.Length;
             var currentPageIndex = entry.FirstPage;
             var buff             = new byte[header.PageSize];
 
@@ -53,9 +53,7 @@ namespace FileContainer
                 currentPageIndex = BitConverter.ToInt32(buff, header.PageUserDataSize);
             }
 
-            return entry.Flags.HasFlag(EntryFlags.Compressed)
-                ? header.DataHandler.Unpack(stmCollector.ToArray())
-                : stmCollector.ToArray();
+            return header.DataHandler.Unpack(stmCollector.ToArray());
         }
 
         /// <summary>

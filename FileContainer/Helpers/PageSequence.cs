@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using JetBrains.Annotations;
 
 namespace FileContainer
@@ -14,6 +15,7 @@ namespace FileContainer
         }
 
 #if DEBUG
+        [ExcludeFromCodeCoverage]
         public override string ToString() => $"{Data.Length} bytes, {Pages.Length} pages";
 #endif
     }

@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
+using FileContainer.Encrypt;
 using JetBrains.Annotations;
 
 namespace FileContainer
@@ -18,13 +19,21 @@ namespace FileContainer
 
     class NoDataPacker : IDataHandler
     {
-        public byte[] Pack(byte[]   data) => data;
-        public byte[] Unpack(byte[] data) => data;
+        [NotNull] readonly IEncryptorDecryptor encryptorDecryptor;
+
+        internal NoDataPacker([NotNull] IEncryptorDecryptor encryptorDecryptor) => this.encryptorDecryptor = encryptorDecryptor;
+
+        public byte[] Pack(byte[]   data) => encryptorDecryptor.Encrypt(data);
+        public byte[] Unpack(byte[] data) => encryptorDecryptor.Decrypt(data);
     }
 
     class GZipDataPacker : IDataHandler
     {
         readonly byte[] buff = new byte[8192];
+
+        [NotNull] readonly IEncryptorDecryptor encryptorDecryptor;
+
+        internal GZipDataPacker([NotNull] IEncryptorDecryptor encryptorDecryptor) => this.encryptorDecryptor = encryptorDecryptor;
 
         public byte[] Pack(byte[] data)
         {
@@ -35,13 +44,13 @@ namespace FileContainer
                 gz.Flush();
             }
 
-            return stm.ToArray();
+            return encryptorDecryptor.Encrypt(stm.ToArray());
         }
 
         public byte[] Unpack(byte[] data)
         {
             using var stm = new MemoryStream();
-            using (var st1 = new MemoryStream(data))
+            using (var st1 = new MemoryStream(encryptorDecryptor.Decrypt(data)))
             {
                 using (var gz = new GZipStream(st1, CompressionMode.Decompress, true))
                 {

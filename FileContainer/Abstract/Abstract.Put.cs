@@ -65,24 +65,10 @@ namespace FileContainer
         PutAppendResult put([NotNull] string key, [NotNull] byte[] data)
         {
             var rawLength = data.Length;
+            data = Header.DataHandler.Pack(data);
 
             var requiredPages = Header.GetRequiredPages(data.Length);
             var entryFlags    = Header.Flags.HasFlag(PersistentContainerFlags.Compressed) ? EntryFlags.Compressed : 0;
-
-            if (Header.Flags.HasFlag(PersistentContainerFlags.Compressed))
-            {
-                var compressedData              = Header.DataHandler.Pack(data);
-                var compressedDataRequiredPages = Header.GetRequiredPages(compressedData.Length);
-                if (compressedDataRequiredPages >= requiredPages) // compressed data >= original data?
-                {
-                    entryFlags = 0; // no compression, write raw
-                }
-                else
-                {
-                    data          = compressedData;
-                    requiredPages = compressedDataRequiredPages;
-                }
-            }
 
             if (entries.TryGet(key, out var existingEntry))
             {

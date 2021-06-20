@@ -48,7 +48,6 @@ namespace FileContainer
     public enum PersistentContainerFlags
     {
         WriteDirImmediately = 1,
-        Compressed          = 2,
-        Encrypted           = 4
+        Compressed          = 2
     }
 }

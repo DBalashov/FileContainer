@@ -44,7 +44,7 @@ namespace FileContainer
             pageAllocations = new ExpandableBitArray(buff);
         }
 
-        /// <summary> записывает содержимое PA в stm, при необходимости - перед этим выделяя страницы и для себя тоже </summary>
+        /// <summary> write self into stm with allocate pages with self </summary>
         public void Write([NotNull] Stream stm)
         {
             var buff           = header.DataHandler.Pack(pageAllocations.GetBytes());
@@ -120,6 +120,7 @@ namespace FileContainer
         }
 
 #if DEBUG
+        [ExcludeFromCodeCoverage]
         public override string ToString() => $"Pages: {pageAllocations.Length}";
 #endif
     }
