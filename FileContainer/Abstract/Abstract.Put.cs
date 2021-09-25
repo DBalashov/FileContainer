@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using JetBrains.Annotations;
 
 namespace FileContainer
 {
@@ -9,7 +8,7 @@ namespace FileContainer
     {
         /// <summary> Create or replace entry with specified key. </summary>
         /// <exception cref="ArgumentException"></exception>
-        public virtual PutAppendResult Put([NotNull] string key, [NotNull] byte[] data)
+        public virtual PutAppendResult Put(string key, byte[] data)
         {
             if (string.IsNullOrEmpty(key))
                 throw new ArgumentException("Argument can't be null or empty", nameof(key));
@@ -17,7 +16,7 @@ namespace FileContainer
             if (data == null || data.Length == 0)
                 throw new ArgumentException("Argument can't be null or empty", nameof(data));
 
-            throwIfHasOpenedStream(new[] {key});
+            throwIfHasOpenedStream(new[] { key });
             if (key.ContainMask())
                 throw new ArgumentException($"Invalid name: {key}");
 
@@ -34,8 +33,7 @@ namespace FileContainer
         /// Value in dictionary must not be null or empty.
         /// </summary>
         /// <exception cref="ArgumentException"></exception>
-        [NotNull]
-        public virtual Dictionary<string, PutAppendResult> Put([NotNull] Dictionary<string, byte[]> keyValues)
+        public virtual Dictionary<string, PutAppendResult> Put(Dictionary<string, byte[]> keyValues)
         {
             throwIfHasOpenedStream(keyValues.Keys);
             foreach (var item in keyValues)
@@ -60,15 +58,15 @@ namespace FileContainer
             return r;
         }
 
-        PutAppendResult put([NotNull] string key, [NotNull] byte[] data)
+        PutAppendResult put(string key, byte[] data)
         {
             var rawLength = data.Length;
-            data = Header.DataHandler.Pack(data);
+            data = Header.DataHandler.Pack(data).ToArray();
 
             var requiredPages = Header.GetRequiredPages(data.Length);
             var entryFlags    = Header.CompressType != PersistentContainerCompressType.None ? EntryFlags.Compressed : 0;
 
-            if (entries.TryGet(key, out var existingEntry))
+            if (entries.TryGet(key, out var existingEntry) && existingEntry != null)
             {
                 var allocatedPages = Stream.ReadPageSequence(Header, existingEntry.FirstPage);
                 if (requiredPages > allocatedPages.Length) // new data require additional pages?

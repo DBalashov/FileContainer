@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
-using JetBrains.Annotations;
 
 namespace FileContainer
 {
@@ -14,19 +13,19 @@ namespace FileContainer
     ///
     /// If count of current pages not enough for AllocatePages - page array will expanded to required pages * PAGE_ALLOC_MULTIPLIER
     /// </summary>
-    class PageAllocator
+    sealed class PageAllocator
     {
         const int PAGE_ALLOC_MULTIPLIER = 4;
 
         const int FIRST_DATA_PAGE = 2;
         const int FIRST_PA_PAGE   = 1;
 
-        [NotNull] readonly ExpandableBitArray   pageAllocations;
-        [NotNull] readonly PagedContainerHeader header;
+        readonly ExpandableBitArray   pageAllocations;
+        readonly PagedContainerHeader header;
 
         public int TotalPages => pageAllocations.Length;
 
-        public PageAllocator([NotNull] PagedContainerHeader header)
+        public PageAllocator(PagedContainerHeader header)
         {
             this.header = header;
 
@@ -35,17 +34,16 @@ namespace FileContainer
             pageAllocations[1] = true;
         }
 
-        public PageAllocator([NotNull] PagedContainerHeader header, [NotNull] Stream stm)
+        public PageAllocator(PagedContainerHeader header, Stream stm)
         {
             this.header = header;
 
             var buff = stm.ReadWithPageSequence(header, FIRST_PA_PAGE).Data;
-            buff            = header.DataHandler.Unpack(buff);
-            pageAllocations = new ExpandableBitArray(buff);
+            pageAllocations = new ExpandableBitArray(header.DataHandler.Unpack(buff).ToArray());
         }
 
         /// <summary> write self into stm with allocate pages with self </summary>
-        public void Write([NotNull] Stream stm)
+        public void Write(Stream stm)
         {
             var buff           = header.DataHandler.Pack(pageAllocations.GetBytes());
             var allocatedPages = stm.ReadPageSequence(header, FIRST_PA_PAGE).ToList();
@@ -62,7 +60,6 @@ namespace FileContainer
 
         #region Allocate / Free
 
-        [NotNull]
         public int[] AllocatePages(int count)
         {
             if (count <= 0)

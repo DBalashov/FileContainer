@@ -2,18 +2,17 @@ using System;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
-using JetBrains.Annotations;
 
 namespace FileContainer
 {
     [ExcludeFromCodeCoverage] // temporary, because in progress
     public class EntryReadonlyStream : Stream
     {
-        [NotNull] readonly PagedContainerAbstract parent;
-        [NotNull] readonly PagedContainerEntry    entry;
-        [NotNull] readonly int[]                  pages;
+        readonly PagedContainerAbstract parent;
+        readonly PagedContainerEntry    entry;
+        readonly int[]                  pages;
 
-        internal EntryReadonlyStream([NotNull] PagedContainerAbstract parent, [NotNull] PagedContainerEntry entry)
+        internal EntryReadonlyStream(PagedContainerAbstract parent, PagedContainerEntry entry)
         {
             this.parent = parent;
             this.entry  = entry;
@@ -39,15 +38,15 @@ namespace FileContainer
             #endregion
 
             var userDataLength = parent.Header.PageUserDataSize;
-            var offsetInPage   = (int) (Position - (Position / userDataLength) * userDataLength);
+            var offsetInPage   = (int)(Position - (Position / userDataLength) * userDataLength);
 
             if (Position + count > entry.Length)
-                count = entry.Length - (int) Position;
+                count = entry.Length - (int)Position;
 
             if (count <= 0) return 0;
 
             var readBytes = 0;
-            foreach (var pageIndex in pages.Skip((int) Position / userDataLength))
+            foreach (var pageIndex in pages.Skip((int)Position / userDataLength))
             {
                 parent.Stream.Position = parent.PageSize * pageIndex + offsetInPage;
 
@@ -98,7 +97,7 @@ namespace FileContainer
         public override void Flush()
         {
         }
-        
+
         protected override void Dispose(bool disposing)
         {
             parent.DetachStream(entry.Name);

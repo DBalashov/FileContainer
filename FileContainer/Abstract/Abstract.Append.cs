@@ -1,14 +1,13 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using JetBrains.Annotations;
 
 namespace FileContainer
 {
     public abstract partial class PagedContainerAbstract
     {
         /// <summary> Append data to end of existing entry. If entry doesn't exists - create new with passed data </summary>
-        public virtual PutAppendResult Append([NotNull] string key, [NotNull] byte[] data)
+        public virtual PutAppendResult Append(string key, byte[] data)
         {
             if (key == null)
                 throw new ArgumentException("Argument can't be null", nameof(data));
@@ -16,7 +15,7 @@ namespace FileContainer
             if (data == null)
                 throw new ArgumentException("Argument can't be null", nameof(data));
 
-            throwIfHasOpenedStream(new[] {key});
+            throwIfHasOpenedStream(new[] { key });
             if (key.ContainMask())
                 throw new ArgumentException($"Invalid name: {key}");
 
@@ -29,8 +28,7 @@ namespace FileContainer
         }
 
         /// <summary> Append data to end of passed entries. Create non-existing entries with passed data. Mask in keys not allowed. </summary>
-        [NotNull]
-        public virtual Dictionary<string, PutAppendResult> Append([NotNull] Dictionary<string, byte[]> keyValues)
+        public virtual Dictionary<string, PutAppendResult> Append(Dictionary<string, byte[]> keyValues)
         {
             if (keyValues == null)
                 throw new ArgumentException("Argument can't be null", nameof(keyValues));
@@ -61,9 +59,9 @@ namespace FileContainer
             return r;
         }
 
-        PutAppendResult append([NotNull] string key, [NotNull] byte[] data)
+        PutAppendResult append(string key, byte[] data)
         {
-            if (!entries.TryGet(key, out var existingEntry))
+            if (!entries.TryGet(key, out var existingEntry) || existingEntry == null)
             {
                 put(key, data);
                 return PutAppendResult.Created;

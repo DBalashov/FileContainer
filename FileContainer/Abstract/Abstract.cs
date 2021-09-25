@@ -3,16 +3,15 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
-using JetBrains.Annotations;
 
 namespace FileContainer
 {
     public abstract partial class PagedContainerAbstract : IDisposable
     {
-        [NotNull] internal readonly Stream                        Stream;
-        [NotNull] internal readonly PagedContainerHeader          Header;
-        [NotNull] readonly          PageAllocator                 pageAllocator;
-        [NotNull] readonly          PagedContainerEntryCollection entries;
+        internal readonly Stream                        Stream;
+        internal readonly PagedContainerHeader          Header;
+        readonly          PageAllocator                 pageAllocator;
+        readonly          PagedContainerEntryCollection entries;
 
         /// <summary> page size (bytes) </summary>
         public int PageSize => Header.PageSize;
@@ -30,7 +29,7 @@ namespace FileContainer
 
         #region constructor / dispose
 
-        protected PagedContainerAbstract([NotNull] Stream stm, PersistentContainerSettings settings = null)
+        protected PagedContainerAbstract(Stream stm, PersistentContainerSettings? settings = null)
         {
             Stream   =   stm;
             settings ??= new PersistentContainerSettings();
@@ -96,7 +95,6 @@ namespace FileContainer
         /// Mask chars * and ? supported in keys.
         /// Return ALL entries if no keys passed.
         /// </summary>
-        [NotNull]
         public PagedContainerEntry[] Find(params string[] keys) =>
             (keys.Any()
                 ? entries.Find(keys)
@@ -106,7 +104,6 @@ namespace FileContainer
         /// Remove entries by keys. Mask * and ? supported.
         /// Return deleted keys.
         /// </summary>
-        [NotNull]
         public virtual string[] Delete(params string[] keys)
         {
             throwIfHasOpenedStream(keys);
@@ -126,10 +123,10 @@ namespace FileContainer
             return r.ToArray();
         }
 
-        public byte[] this[string key]
+        public byte[]? this[string key]
         {
-            [CanBeNull] get => Get(key);
-            [NotNull] set => Put(key, value);
+            get => Get(key);
+            set => Put(key, value!);
         }
 
         [ExcludeFromCodeCoverage]

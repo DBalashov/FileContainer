@@ -3,15 +3,13 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
-using JetBrains.Annotations;
 
 namespace FileContainer
 {
     class PagedContainerEntryCollection
     {
-        [NotNull] readonly Dictionary<string, PagedContainerEntry> entries;
-
-        [NotNull] int[] pages;
+        readonly Dictionary<string, PagedContainerEntry> entries;
+        int[]                                            pages;
 
         public bool Modified { get; private set; }
 
@@ -23,7 +21,7 @@ namespace FileContainer
 
         #region Read / Write
 
-        internal PagedContainerEntryCollection([NotNull] PagedContainerHeader header, PageSequence ps)
+        internal PagedContainerEntryCollection(PagedContainerHeader header, PageSequence ps)
         {
             entries  = ps.Data.ReadEntries(header.DataHandler);
             pages    = ps.Pages;
@@ -34,7 +32,7 @@ namespace FileContainer
         /// Write entries directory to pages. If pages not enough for new directory - additional pages will allocated.
         /// Also write header and pageAllocator state
         /// </summary>
-        public void Write([NotNull] Stream stm, [NotNull] PagedContainerHeader header, [NotNull] PageAllocator pageAllocator)
+        public void Write(Stream stm, PagedContainerHeader header, PageAllocator pageAllocator)
         {
             var targetPages = pages;
 
@@ -68,18 +66,18 @@ namespace FileContainer
 
         #region TryGet / Add / Remove / Update
 
-        public bool TryGet([NotNull] string key, out PagedContainerEntry item) =>
+        public bool TryGet(string key, out PagedContainerEntry? item) =>
             string.IsNullOrEmpty(key)
                 ? throw new ArgumentException("Argument can't be null or empty", nameof(key))
                 : entries.TryGetValue(key, out item);
 
-        public void Add([NotNull] PagedContainerEntry entry)
+        public void Add(PagedContainerEntry entry)
         {
             entries.Add(entry.Name, entry);
             Modified = true;
         }
 
-        public bool Remove([NotNull] PagedContainerEntry entry)
+        public bool Remove(PagedContainerEntry entry)
         {
             if (!entries.ContainsKey(entry.Name)) return false;
 
@@ -89,7 +87,7 @@ namespace FileContainer
             return true;
         }
 
-        public void Update([NotNull] PagedContainerEntry entry, int pageFirst, int pageLast, int rawLength, int compressedLength, EntryFlags flags)
+        public void Update(PagedContainerEntry entry, int pageFirst, int pageLast, int rawLength, int compressedLength, EntryFlags flags)
         {
             entry.Update(pageFirst, pageLast, rawLength, compressedLength, flags);
             Modified = true;
@@ -98,7 +96,6 @@ namespace FileContainer
         #endregion
 
         /// <exception cref="ArgumentException"></exception>
-        [NotNull]
         public IEnumerable<PagedContainerEntry> Find(params string[] keys)
         {
             var processed = new HashSet<string>(StringComparer.InvariantCultureIgnoreCase);
@@ -129,7 +126,7 @@ namespace FileContainer
             }
         }
 
-        [NotNull]
+
         public IEnumerable<PagedContainerEntry> All() => entries.Values.ToArray();
 
         [ExcludeFromCodeCoverage]

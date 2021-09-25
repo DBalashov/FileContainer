@@ -3,7 +3,6 @@ using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Text;
 using FileContainer.Encrypt;
-using JetBrains.Annotations;
 
 namespace FileContainer
 {
@@ -25,11 +24,11 @@ namespace FileContainer
         /// <summary> first page index of entries directory. 0 for new files, will updated after adding first entry </summary>
         public int DirectoryFirstPage;
 
-        [NotNull] public IDataHandler DataHandler;
+        public IDataHandler DataHandler;
 
         #region constructor
 
-        internal PagedContainerHeader([NotNull] PersistentContainerSettings settings)
+        internal PagedContainerHeader(PersistentContainerSettings settings)
         {
             PageSize         = settings.PageSize;
             PageUserDataSize = settings.PageSize - 4;
@@ -38,7 +37,7 @@ namespace FileContainer
             DataHandler      = getDataHandler(settings.CompressType, settings.encryptorDecryptor);
         }
 
-        internal PagedContainerHeader([NotNull] Stream stm, [NotNull] IEncryptorDecryptor encryptorDecryptor)
+        internal PagedContainerHeader(Stream stm, IEncryptorDecryptor encryptorDecryptor)
         {
             if (stm.Length < HEADER_PART)
                 throw new InvalidDataException("PagedContainerHeader: File corrupted (too small)");
@@ -68,8 +67,8 @@ namespace FileContainer
             DataHandler  = getDataHandler(CompressType, encryptorDecryptor);
         }
 
-        [NotNull]
-        IDataHandler getDataHandler(PersistentContainerCompressType compressType, [NotNull] IEncryptorDecryptor encryptorDecryptor) =>
+
+        IDataHandler getDataHandler(PersistentContainerCompressType compressType, IEncryptorDecryptor encryptorDecryptor) =>
             compressType switch
             {
                 PersistentContainerCompressType.None => new NoDataPacker(encryptorDecryptor),
@@ -80,7 +79,7 @@ namespace FileContainer
 
         #endregion
 
-        public void Write([NotNull] Stream stm)
+        public void Write(Stream stm)
         {
             using var bw = new BinaryWriter(stm, Encoding.Default, true);
 

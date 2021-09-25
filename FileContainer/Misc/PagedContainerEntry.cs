@@ -1,15 +1,11 @@
 using System;
-using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
-using System.IO;
-using System.Text;
-using JetBrains.Annotations;
 
 namespace FileContainer
 {
     public class PagedContainerEntry
     {
-        [NotNull] public string Name { get; }
+        public string Name { get; }
 
         /// <summary> in bytes </summary>
         public int Length { get; private set; }
@@ -25,7 +21,7 @@ namespace FileContainer
         public int FirstPage { get; private set; }
         public int LastPage  { get; private set; }
 
-        internal PagedContainerEntry([NotNull] string name, int pageFirst, int pageLast, int rawLength, int compressedLength, EntryFlags flags, DateTime modified)
+        internal PagedContainerEntry(string name, int pageFirst, int pageLast, int rawLength, int compressedLength, EntryFlags flags, DateTime modified)
         {
             Name = name;
             Update(pageFirst, pageLast, rawLength, compressedLength, flags);

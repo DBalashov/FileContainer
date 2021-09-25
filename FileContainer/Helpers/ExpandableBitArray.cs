@@ -1,10 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
-using System.IO;
 using System.Runtime.CompilerServices;
 using System.Text;
-using JetBrains.Annotations;
 
 namespace FileContainer
 {
@@ -14,7 +12,7 @@ namespace FileContainer
         const uint ALL_ON  = 0xFFFFFFFF;
         const uint ALL_OFF = 0;
 
-        [NotNull] uint[] values;
+        uint[] values;
 
         public int Length => values.Length * BPV;
 
@@ -27,7 +25,7 @@ namespace FileContainer
         }
 
         /// <summary> create bit array from bytes. If bytes unaligned to 4 bytes (32 bits) - array will expanded to nearest 4 byte length with zero bits </summary>
-        public ExpandableBitArray([NotNull] byte[] bytes)
+        public ExpandableBitArray(byte[] bytes)
         {
             var byteInValue = BPV / 8;
             if (bytes.Length % byteInValue != 0)
@@ -85,7 +83,6 @@ namespace FileContainer
         /// Return bit indexes from 0-index with state. Can be used with Skip/Take for make fixed bits array.
         /// Bits array not expanded.
         /// </summary>
-        [NotNull]
         public IEnumerable<int> GetBits(bool withState)
         {
             int bitIndex = 0;
@@ -127,7 +124,7 @@ namespace FileContainer
 
         /// <summary> Set bits with passed indexes to state. if bitIndex > Length - bits array will expanded </summary>
         [ExcludeFromCodeCoverage] // not used now
-        public void SetBits([NotNull] int[] bitIndexes, bool toState = false)
+        public void SetBits(int[] bitIndexes, bool toState = false)
         {
             foreach (var bitIndex in bitIndexes)
             {
@@ -139,7 +136,6 @@ namespace FileContainer
         }
 
         /// <summary> return internal representation of bits. Can be used in constructor for clone (for example) </summary>
-        [NotNull]
         public byte[] GetBytes()
         {
             var b = new byte[values.Length * BPV / 8];
@@ -155,8 +151,8 @@ namespace FileContainer
             var valueIndex = bitIndex / BPV;
             var mask       = 1 << (bitIndex % BPV);
             if (toState)
-                values[valueIndex]  |= (uint) mask;
-            else values[valueIndex] &= (uint) ~mask;
+                values[valueIndex]  |= (uint)mask;
+            else values[valueIndex] &= (uint)~mask;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

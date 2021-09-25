@@ -1,7 +1,5 @@
 using System;
-using System.Collections.Generic;
 using System.IO;
-using JetBrains.Annotations;
 
 namespace FileContainer
 {
@@ -38,7 +36,7 @@ namespace FileContainer
     /// </summary>
     public class PersistentContainer : PagedContainerAbstract
     {
-        public PersistentContainer([NotNull] string fileName, PersistentContainerSettings settings = null) :
+        public PersistentContainer(string fileName, PersistentContainerSettings? settings = null) :
             base(new FileStream(fileName, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.None, (settings?.PageSize ?? 4096) * 2), settings)
         {
         }

@@ -1,13 +1,10 @@
-using JetBrains.Annotations;
+using System;
 
 namespace FileContainer
 {
     interface IDataHandler
     {
-        [NotNull]
-        byte[] Pack([NotNull] byte[] data);
-
-        [NotNull]
-        byte[] Unpack([NotNull] byte[] data);
+        Span<byte> Pack(Span<byte>   data);
+        Span<byte> Unpack(Span<byte> data);
     }
 }

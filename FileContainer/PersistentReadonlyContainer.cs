@@ -1,14 +1,13 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using JetBrains.Annotations;
 
 namespace FileContainer
 {
     /// <summary> Read only container, support of concurrent access to single container </summary>
     public class PersistentReadonlyContainer : PagedContainerAbstract
     {
-        public PersistentReadonlyContainer([NotNull] string fileName, PersistentContainerSettings settings = null) :
+        public PersistentReadonlyContainer(string fileName, PersistentContainerSettings? settings = null) :
             base(File.Exists(fileName)
                      ? new FileStream(fileName, FileMode.Open, FileAccess.Read, FileShare.Read, (settings?.PageSize ?? 4096) * 2)
                      : new MemoryStream(), settings)

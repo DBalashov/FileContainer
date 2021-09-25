@@ -1,18 +1,16 @@
+using System;
 using FileContainer.Encrypt;
-using JetBrains.Annotations;
 using LZ4;
 
 namespace FileContainer
 {
-    class LZ4DataPacker : IDataHandler
+    sealed class LZ4DataPacker : IDataHandler
     {
-        [NotNull] readonly IEncryptorDecryptor encryptorDecryptor;
+        readonly IEncryptorDecryptor encryptorDecryptor;
 
-        internal LZ4DataPacker([NotNull] IEncryptorDecryptor encryptorDecryptor) => this.encryptorDecryptor = encryptorDecryptor;
+        internal LZ4DataPacker(IEncryptorDecryptor encryptorDecryptor) => this.encryptorDecryptor = encryptorDecryptor;
 
-        public byte[] Pack(byte[] data) => 
-            encryptorDecryptor.Encrypt(LZ4Codec.Pack(data, 0, data.Length));
-
-        public byte[] Unpack(byte[] data) => LZ4Codec.Unpack(encryptorDecryptor.Decrypt(data));
+        public Span<byte> Pack(Span<byte>   data) => encryptorDecryptor.Encrypt(data.PackLZ4());
+        public Span<byte> Unpack(Span<byte> data) => encryptorDecryptor.Decrypt(data).UnpackLZ4();
     }
 }

@@ -1,11 +1,8 @@
 using System;
-using System.Collections;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Runtime.CompilerServices;
 using System.Text;
-using JetBrains.Annotations;
 
 namespace FileContainer
 {
@@ -18,8 +15,7 @@ namespace FileContainer
         /// string must be stored as [ushort length][utf-8 bytes]
         /// offset will forward
         /// </summary>
-        [NotNull]
-        internal static string GetString([NotNull] this byte[] buff, ref int offset)
+        internal static string GetString(this byte[] buff, ref int offset)
         {
             var nameLength = BitConverter.ToUInt16(buff, offset);
             offset += 2;
@@ -32,8 +28,8 @@ namespace FileContainer
             return r;
         }
 
-        [NotNull]
-        internal static BinaryWriter PutString([NotNull] this BinaryWriter bw, string value)
+
+        internal static BinaryWriter PutString(this BinaryWriter bw, string value)
         {
             var b = defaultEncoding.GetBytes(value);
             bw.Write((ushort)b.Length);
@@ -45,7 +41,7 @@ namespace FileContainer
         /// <summary> read 32 bit int from buff starting with offset. Offset will forward to 4 bytes </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         [DebuggerStepThrough]
-        internal static int GetInt([NotNull] this byte[] buff, ref int offset)
+        internal static int GetInt(this byte[] buff, ref int offset)
         {
             var r = BitConverter.ToInt32(buff, offset);
             offset += 4;
@@ -55,7 +51,7 @@ namespace FileContainer
         /// <summary> read 16 bit unsigned int from buff starting with offset. Offset will forward to 2 bytes </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         [DebuggerStepThrough]
-        internal static ushort GetUInt16([NotNull] this byte[] buff, ref int offset)
+        internal static ushort GetUInt16(this byte[] buff, ref int offset)
         {
             var r = BitConverter.ToUInt16(buff, offset);
             offset += 2;
@@ -63,7 +59,7 @@ namespace FileContainer
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        internal static bool ContainMask([NotNull] this string name) => name.Contains("*") || name.Contains("?");
+        internal static bool ContainMask(this string name) => name.Contains("*") || name.Contains("?");
 
         internal static void ValidatePageSize(int pageSize)
         {

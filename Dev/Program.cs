@@ -21,7 +21,9 @@ namespace Dev
             //     var z2 = cc.Decrypt(b);
             // }
 
-            var aes = Rijndael.Create();
+            var aes = Aes.Create();
+            aes.GenerateKey();
+            aes.GenerateIV();
 
             var fileName = Path.Combine(@"D:\test2.container");
             if (File.Exists(fileName))
@@ -29,7 +31,7 @@ namespace Dev
 
             var text = string.Join(Environment.NewLine, Enumerable.Range(0, 15).Select(p => $"Hello, line #{p}, Текст, κείμενο, ਟੈਕਸਟ, random guid: {Guid.NewGuid()}"));
 
-            const int maxItems = 1000;
+            const int maxItems = 50;
             using (var pc = new PersistentContainer(fileName, new PersistentContainerSettings(256).With(aes)))
             {
                 foreach (var itemId in Enumerable.Range(0, maxItems))

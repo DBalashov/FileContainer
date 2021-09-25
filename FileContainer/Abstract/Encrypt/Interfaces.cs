@@ -1,20 +1,16 @@
-using JetBrains.Annotations;
+using System;
 
 namespace FileContainer.Encrypt
 {
     interface IEncryptorDecryptor
     {
-        [NotNull]
-        byte[] Encrypt([NotNull] byte[] data);
-
-        [NotNull]
-        byte[] Decrypt([NotNull] byte[] data);
+        Span<byte> Encrypt(Span<byte> data);
+        Span<byte> Decrypt(Span<byte> data);
     }
 
-    class EncryptorDecryptorStub : IEncryptorDecryptor
+    sealed class EncryptorDecryptorStub : IEncryptorDecryptor
     {
-        public byte[] Encrypt(byte[] data) => data;
-
-        public byte[] Decrypt(byte[] data) => data;
+        public Span<byte> Encrypt(Span<byte> data) => data;
+        public Span<byte> Decrypt(Span<byte> data) => data;
     }
 }

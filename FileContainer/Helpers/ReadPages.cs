@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using JetBrains.Annotations;
 
 namespace FileContainer
 {
@@ -11,7 +10,7 @@ namespace FileContainer
         /// Read data and page numbers, starting from 'startFromPage'
         /// Used in PageAllocator & PagedContainerEntryCollection
         /// </summary>
-        internal static PageSequence ReadWithPageSequence([NotNull] this Stream stm, [NotNull] PagedContainerHeader header, int startFromPage)
+        internal static PageSequence ReadWithPageSequence(this Stream stm, PagedContainerHeader header, int startFromPage)
         {
             using var stmCollector = new MemoryStream();
 
@@ -32,8 +31,7 @@ namespace FileContainer
         }
 
         /// <summary> Read data from pages, starting with entry.FirstPage </summary>
-        [NotNull]
-        internal static byte[] ReadEntryPageSequence([NotNull] this Stream stm, [NotNull] PagedContainerHeader header, [NotNull] PagedContainerEntry entry)
+        internal static byte[] ReadEntryPageSequence(this Stream stm, PagedContainerHeader header, PagedContainerEntry entry)
         {
             using var stmCollector = new MemoryStream(entry.Length); // todo replace with byte[]
 
@@ -53,7 +51,7 @@ namespace FileContainer
                 currentPageIndex = BitConverter.ToInt32(buff, header.PageUserDataSize);
             }
 
-            return header.DataHandler.Unpack(stmCollector.ToArray());
+            return header.DataHandler.Unpack(stmCollector.ToArray()).ToArray();
         }
 
         /// <summary>
@@ -61,8 +59,7 @@ namespace FileContainer
         /// Last 32 bit contain next page index.
         /// Last page in sequence contain 'next page index' value == 0
         /// </summary>
-        [NotNull]
-        internal static int[] ReadPageSequence([NotNull] this Stream stm, [NotNull] PagedContainerHeader header, int startFromPage)
+        internal static int[] ReadPageSequence(this Stream stm, PagedContainerHeader header, int startFromPage)
         {
             var pages = new List<int>();
 

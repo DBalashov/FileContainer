@@ -1,14 +1,13 @@
 using System.Diagnostics.CodeAnalysis;
-using JetBrains.Annotations;
 
 namespace FileContainer
 {
     readonly struct PageSequence
     {
-        [NotNull] internal readonly byte[] Data;
-        [NotNull] internal readonly int[]  Pages;
+        internal readonly byte[] Data;
+        internal readonly int[]  Pages;
 
-        internal PageSequence([NotNull] byte[] data, [NotNull] int[] pages)
+        internal PageSequence(byte[] data, int[] pages)
         {
             Data  = data;
             Pages = pages;

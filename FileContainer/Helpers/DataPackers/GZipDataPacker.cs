@@ -1,35 +1,38 @@
+using System;
 using System.IO;
 using System.IO.Compression;
 using FileContainer.Encrypt;
-using JetBrains.Annotations;
 
 namespace FileContainer
 {
-    class GZipDataPacker : IDataHandler
+    sealed class GZipDataPacker : IDataHandler
     {
         readonly byte[] buff = new byte[8192];
 
-        [NotNull] readonly IEncryptorDecryptor encryptorDecryptor;
+        readonly IEncryptorDecryptor encryptorDecryptor;
 
-        internal GZipDataPacker([NotNull] IEncryptorDecryptor encryptorDecryptor) => this.encryptorDecryptor = encryptorDecryptor;
+        internal GZipDataPacker(IEncryptorDecryptor encryptorDecryptor) => this.encryptorDecryptor = encryptorDecryptor;
 
-        public byte[] Pack(byte[] data)
+        public Span<byte> Pack(Span<byte> data)
         {
             using var stm = new MemoryStream();
             using (var gz = new GZipStream(stm, CompressionMode.Compress, true))
             {
-                gz.Write(data, 0, data.Length);
+                gz.Write(data);
                 gz.Flush();
             }
 
             return encryptorDecryptor.Encrypt(stm.ToArray());
         }
 
-        public byte[] Unpack(byte[] data)
+        public Span<byte> Unpack(Span<byte> data)
         {
             using var stm = new MemoryStream();
-            using (var st1 = new MemoryStream(encryptorDecryptor.Decrypt(data)))
+            using (var st1 = new MemoryStream())
             {
+                st1.Write(encryptorDecryptor.Decrypt(data));
+                st1.Position = 0;
+                
                 using (var gz = new GZipStream(st1, CompressionMode.Decompress, true))
                 {
                     int read;

@@ -1,44 +1,46 @@
+using System;
 using System.IO;
 using System.Security.Cryptography;
 
 namespace FileContainer.Encrypt
 {
-    class Symmetric : IEncryptorDecryptor
+    sealed class Symmetric : IEncryptorDecryptor
     {
         readonly SymmetricAlgorithm algo;
-        readonly byte[]             tempBuffer = new byte[1024];
 
         internal Symmetric(SymmetricAlgorithm algo) => this.algo = algo;
 
-        public byte[] Encrypt(byte[] data)
+        public Span<byte> Encrypt(Span<byte> data)
         {
-            using (var stm = new MemoryStream())
+            using var stm = new MemoryStream();
+            stm.Write(BitConverter.GetBytes(data.Length), 0, 4);
+
             using (var encryptor = algo.CreateEncryptor())
             using (var cs = new CryptoStream(stm, encryptor, CryptoStreamMode.Write))
             {
-                cs.Write(data, 0, data.Length);
+                cs.Write(data);
                 cs.FlushFinalBlock();
+                cs.Flush();
                 data = stm.ToArray();
             }
 
             return data;
         }
 
-        public byte[] Decrypt(byte[] data)
+        public Span<byte> Decrypt(Span<byte> data)
         {
-            using var msResult  = new MemoryStream();
-            using var ms        = new MemoryStream(data);
-            using var decryptor = algo.CreateDecryptor();
-            using var stm       = new CryptoStream(ms, decryptor, CryptoStreamMode.Read);
-            int       readed;
-            do
-            {
-                readed = stm.Read(tempBuffer, 0, tempBuffer.Length);
-                if (readed > 0)
-                    msResult.Write(tempBuffer, 0, readed);
-            } while (readed > 0);
+            var resultDataLength = BitConverter.ToInt32(data);
+            var buff             = new byte[resultDataLength];
 
-            return msResult.ToArray();
+            using var ms = new MemoryStream();
+            ms.Write(data.Slice(4));
+            ms.Position = 0;
+
+            using (var decryptor = algo.CreateDecryptor())
+            using (var stm = new CryptoStream(ms, decryptor, CryptoStreamMode.Read))
+                stm.Read(buff, 0, resultDataLength);
+
+            return buff;
         }
     }
 }

@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using JetBrains.Annotations;
 
 namespace FileContainer
 {
@@ -17,8 +16,7 @@ namespace FileContainer
         /// 
         /// Value of entry can't be changed and exception will throwed (Append/Delete/Put operations) until existing stream was closed. 
         /// </summary>
-        [CanBeNull]
-        public EntryReadonlyStream GetStream([NotNull] string key)
+        public EntryReadonlyStream? GetStream(string key)
         {
             var entry = entries.Find(key).FirstOrDefault();
             if (entry == null)
@@ -34,14 +32,14 @@ namespace FileContainer
 
         /// <summary> throw if opened stream of any key found </summary>
         /// <exception cref="InvalidOperationException"></exception>
-        void throwIfHasOpenedStream([NotNull] IEnumerable<string> keys)
+        void throwIfHasOpenedStream(IEnumerable<string> keys)
         {
             foreach (var key in keys)
                 if (attachedStreams.ContainsKey(key))
                     throw new InvalidOperationException($"Modify operation while attached ReadOnlyStream: {key}");
         }
 
-        internal void DetachStream([NotNull] string key)
+        internal void DetachStream(string key)
         {
             if (attachedStreams.TryGetValue(key, out var s))
                 attachedStreams.Remove(key);

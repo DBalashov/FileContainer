@@ -1,6 +1,5 @@
 using System;
 using System.IO;
-using JetBrains.Annotations;
 
 namespace FileContainer
 {
@@ -8,11 +7,11 @@ namespace FileContainer
     {
         readonly bool externalMemoryStream = false;
 
-        public InMemoryContainer(PersistentContainerSettings settings = null) : base(new MemoryStream(), settings)
+        public InMemoryContainer(PersistentContainerSettings? settings = null) : base(new MemoryStream(), settings)
         {
         }
 
-        public InMemoryContainer([NotNull] MemoryStream stm, PersistentContainerSettings settings = null) : base(stm, settings) =>
+        public InMemoryContainer(MemoryStream stm, PersistentContainerSettings? settings = null) : base(stm, settings) =>
             externalMemoryStream = true;
 
         protected override void DisposeStream()
