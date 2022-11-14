@@ -1,5 +1,12 @@
 # FileContainer
 
+Key/value file container.
+File organized with fixed-size pages.
+
+### Run benchmark
+
+Run `Benchmark project` - .net 6 targeted
+
 ### Speed tests
 
 #### Single requests - write
