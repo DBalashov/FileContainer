@@ -12,15 +12,14 @@ namespace FileContainer
         #region Get
 
         /// <exception cref="ArgumentException"></exception>
-        public static string? GetString( this PagedContainerAbstract c, string key)
+        public static string? GetString(this PagedContainerAbstract c, string key)
         {
             var value = c.Get(key);
             return value == null ? null : defaultEncoding.GetString(value);
         }
 
         /// <summary> Get entries by keys. Mask chars * and ? supported in keys </summary>
-        
-        public static Dictionary<string, string> GetString( this PagedContainerAbstract c, params string[] keys) =>
+        public static Dictionary<string, string> GetString(this PagedContainerAbstract c, params string[] keys) =>
             c.Get(keys).ToDictionary(p => p.Key, p => defaultEncoding.GetString(p.Value), StringComparer.InvariantCultureIgnoreCase);
 
         #endregion
@@ -29,7 +28,7 @@ namespace FileContainer
 
         /// <summary> Create or replace entry with specified key </summary>
         /// <exception cref="ArgumentException"></exception>
-        public static PutAppendResult Put( this PagedContainerAbstract c,  string key,  string data)
+        public static PutAppendResult Put(this PagedContainerAbstract c, string key, string data)
         {
             if (string.IsNullOrEmpty(data))
                 throw new ArgumentException("Argument can't be null or empty", nameof(data));
@@ -42,8 +41,7 @@ namespace FileContainer
         /// Value in dictionary must not be null or empty.
         /// </summary>
         /// <exception cref="ArgumentException"></exception>
-        
-        public static Dictionary<string, PutAppendResult> Put( this PagedContainerAbstract c,  Dictionary<string, string> keyValues)
+        public static Dictionary<string, PutAppendResult> Put(this PagedContainerAbstract c, Dictionary<string, string> keyValues)
         {
             foreach (var item in keyValues)
             {
@@ -61,7 +59,7 @@ namespace FileContainer
 
         #region Append
 
-        public static PutAppendResult Append( this PagedContainerAbstract c,  string key,  string data)
+        public static PutAppendResult Append(this PagedContainerAbstract c, string key, string data)
         {
             if (string.IsNullOrEmpty(data))
                 throw new ArgumentException("Argument can't be null or empty", nameof(data));
@@ -69,8 +67,8 @@ namespace FileContainer
             return c.Append(key, defaultEncoding.GetBytes(data));
         }
 
-        
-        public static Dictionary<string, PutAppendResult> Append( this PagedContainerAbstract c,  Dictionary<string, string> keyValues)
+
+        public static Dictionary<string, PutAppendResult> Append(this PagedContainerAbstract c, Dictionary<string, string> keyValues)
         {
             foreach (var item in keyValues)
             {
