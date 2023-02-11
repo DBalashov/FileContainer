@@ -8,7 +8,13 @@ namespace FileContainer.Tests
     public class TestWrites : TestBase
     {
         [Test]
-        public void Write_Batch() =>
+        [TestCase(0,                                            PersistentContainerCompressType.None)]
+        [TestCase(0,                                            PersistentContainerCompressType.GZip)]
+        [TestCase(0,                                            PersistentContainerCompressType.LZ4)]
+        [TestCase(PersistentContainerFlags.WriteDirImmediately, PersistentContainerCompressType.None)]
+        [TestCase(PersistentContainerFlags.WriteDirImmediately, PersistentContainerCompressType.GZip)]
+        [TestCase(PersistentContainerFlags.WriteDirImmediately, PersistentContainerCompressType.LZ4)]
+        public void Write_Batch(PersistentContainerFlags flags, PersistentContainerCompressType compressType) =>
             DoIt(factory =>
             {
                 Dictionary<string, byte[]> randomBlocks;
@@ -27,10 +33,16 @@ namespace FileContainer.Tests
                         Assert.IsTrue(value.SequenceEqual(item.Value));
                     }
                 }
-            });
+            }, flags, compressType);
 
         [Test]
-        public void Write_Single() =>
+        [TestCase(0,                                            PersistentContainerCompressType.None)]
+        [TestCase(0,                                            PersistentContainerCompressType.GZip)]
+        [TestCase(0,                                            PersistentContainerCompressType.LZ4)]
+        [TestCase(PersistentContainerFlags.WriteDirImmediately, PersistentContainerCompressType.None)]
+        [TestCase(PersistentContainerFlags.WriteDirImmediately, PersistentContainerCompressType.GZip)]
+        [TestCase(PersistentContainerFlags.WriteDirImmediately, PersistentContainerCompressType.LZ4)]
+        public void Write_Single(PersistentContainerFlags flags, PersistentContainerCompressType compressType) =>
             DoIt(factory =>
             {
                 Dictionary<string, byte[]> randomBlocks;
@@ -50,7 +62,7 @@ namespace FileContainer.Tests
                         Assert.IsTrue(value.SequenceEqual(item.Value));
                     }
                 }
-            });
+            }, flags, compressType);
 
         #region expand
 
@@ -175,7 +187,13 @@ namespace FileContainer.Tests
         #endregion
 
         [Test]
-        public void Write_Batch_Than_Single() =>
+        [TestCase(0,                                            PersistentContainerCompressType.None)]
+        [TestCase(0,                                            PersistentContainerCompressType.GZip)]
+        [TestCase(0,                                            PersistentContainerCompressType.LZ4)]
+        [TestCase(PersistentContainerFlags.WriteDirImmediately, PersistentContainerCompressType.None)]
+        [TestCase(PersistentContainerFlags.WriteDirImmediately, PersistentContainerCompressType.GZip)]
+        [TestCase(PersistentContainerFlags.WriteDirImmediately, PersistentContainerCompressType.LZ4)]
+        public void Write_Batch_Than_Single(PersistentContainerFlags flags, PersistentContainerCompressType compressType) =>
             DoIt(factory =>
             {
                 Dictionary<string, byte[]> randomBlocks;
@@ -198,10 +216,16 @@ namespace FileContainer.Tests
                         Assert.IsTrue(value.SequenceEqual(item.Value));
                     }
                 }
-            });
+            }, flags, compressType);
 
         [Test]
-        public void Write_Single_Than_Batch() =>
+        [TestCase(0,                                            PersistentContainerCompressType.None)]
+        [TestCase(0,                                            PersistentContainerCompressType.GZip)]
+        [TestCase(0,                                            PersistentContainerCompressType.LZ4)]
+        [TestCase(PersistentContainerFlags.WriteDirImmediately, PersistentContainerCompressType.None)]
+        [TestCase(PersistentContainerFlags.WriteDirImmediately, PersistentContainerCompressType.GZip)]
+        [TestCase(PersistentContainerFlags.WriteDirImmediately, PersistentContainerCompressType.LZ4)]
+        public void Write_Single_Than_Batch(PersistentContainerFlags flags, PersistentContainerCompressType compressType) =>
             DoIt(factory =>
             {
                 Dictionary<string, byte[]> randomBlocks;
@@ -224,6 +248,6 @@ namespace FileContainer.Tests
                         Assert.IsTrue(value.SequenceEqual(item.Value));
                     }
                 }
-            });
+            }, flags, compressType);
     }
 }

@@ -8,7 +8,13 @@ namespace FileContainer.Tests
     public class TestReads : TestBase
     {
         [Test]
-        public void Read_Batch() =>
+        [TestCase(0,                                            PersistentContainerCompressType.None)]
+        [TestCase(0,                                            PersistentContainerCompressType.GZip)]
+        [TestCase(0,                                            PersistentContainerCompressType.LZ4)]
+        [TestCase(PersistentContainerFlags.WriteDirImmediately, PersistentContainerCompressType.None)]
+        [TestCase(PersistentContainerFlags.WriteDirImmediately, PersistentContainerCompressType.GZip)]
+        [TestCase(PersistentContainerFlags.WriteDirImmediately, PersistentContainerCompressType.LZ4)]
+        public void Read_Batch(PersistentContainerFlags flags, PersistentContainerCompressType compressType) =>
             DoIt(factory =>
             {
                 Dictionary<string, byte[]> randomBlocks;
@@ -30,10 +36,16 @@ namespace FileContainer.Tests
                         Assert.IsTrue(item.Value.SequenceEqual(r[item.Key]));
                     }
                 }
-            });
+            }, flags, compressType);
 
         [Test]
-        public void Read_Single() =>
+        [TestCase(0,                                            PersistentContainerCompressType.None)]
+        [TestCase(0,                                            PersistentContainerCompressType.GZip)]
+        [TestCase(0,                                            PersistentContainerCompressType.LZ4)]
+        [TestCase(PersistentContainerFlags.WriteDirImmediately, PersistentContainerCompressType.None)]
+        [TestCase(PersistentContainerFlags.WriteDirImmediately, PersistentContainerCompressType.GZip)]
+        [TestCase(PersistentContainerFlags.WriteDirImmediately, PersistentContainerCompressType.LZ4)]
+        public void Read_Single(PersistentContainerFlags flags, PersistentContainerCompressType compressType) =>
             DoIt(factory =>
             {
                 Dictionary<string, byte[]> randomBlocks;
@@ -57,28 +69,52 @@ namespace FileContainer.Tests
                         Assert.IsTrue(item.Value.SequenceEqual(r[item.Key]));
                     }
                 }
-            });
+            }, flags, compressType);
 
         [Test]
-        public void Read_Batch_WithOffset()
+        [TestCase(0,                                            PersistentContainerCompressType.None)]
+        [TestCase(0,                                            PersistentContainerCompressType.GZip)]
+        [TestCase(0,                                            PersistentContainerCompressType.LZ4)]
+        [TestCase(PersistentContainerFlags.WriteDirImmediately, PersistentContainerCompressType.None)]
+        [TestCase(PersistentContainerFlags.WriteDirImmediately, PersistentContainerCompressType.GZip)]
+        [TestCase(PersistentContainerFlags.WriteDirImmediately, PersistentContainerCompressType.LZ4)]
+        public void Read_Batch_WithOffset(PersistentContainerFlags flags, PersistentContainerCompressType compressType)
         {
             // todo
         }
 
         [Test]
-        public void Read_Single_WithOffset()
+        [TestCase(0,                                            PersistentContainerCompressType.None)]
+        [TestCase(0,                                            PersistentContainerCompressType.GZip)]
+        [TestCase(0,                                            PersistentContainerCompressType.LZ4)]
+        [TestCase(PersistentContainerFlags.WriteDirImmediately, PersistentContainerCompressType.None)]
+        [TestCase(PersistentContainerFlags.WriteDirImmediately, PersistentContainerCompressType.GZip)]
+        [TestCase(PersistentContainerFlags.WriteDirImmediately, PersistentContainerCompressType.LZ4)]
+        public void Read_Single_WithOffset(PersistentContainerFlags flags, PersistentContainerCompressType compressType)
         {
             // todo
         }
 
         [Test]
-        public void Read_Batch_WithOffsetLength()
+        [TestCase(0,                                            PersistentContainerCompressType.None)]
+        [TestCase(0,                                            PersistentContainerCompressType.GZip)]
+        [TestCase(0,                                            PersistentContainerCompressType.LZ4)]
+        [TestCase(PersistentContainerFlags.WriteDirImmediately, PersistentContainerCompressType.None)]
+        [TestCase(PersistentContainerFlags.WriteDirImmediately, PersistentContainerCompressType.GZip)]
+        [TestCase(PersistentContainerFlags.WriteDirImmediately, PersistentContainerCompressType.LZ4)]
+        public void Read_Batch_WithOffsetLength(PersistentContainerFlags flags, PersistentContainerCompressType compressType)
         {
             // todo
         }
 
         [Test]
-        public void Read_Single_WithOffsetLength()
+        [TestCase(0,                                            PersistentContainerCompressType.None)]
+        [TestCase(0,                                            PersistentContainerCompressType.GZip)]
+        [TestCase(0,                                            PersistentContainerCompressType.LZ4)]
+        [TestCase(PersistentContainerFlags.WriteDirImmediately, PersistentContainerCompressType.None)]
+        [TestCase(PersistentContainerFlags.WriteDirImmediately, PersistentContainerCompressType.GZip)]
+        [TestCase(PersistentContainerFlags.WriteDirImmediately, PersistentContainerCompressType.LZ4)]
+        public void Read_Single_WithOffsetLength(PersistentContainerFlags flags, PersistentContainerCompressType compressType)
         {
             // todo
         }

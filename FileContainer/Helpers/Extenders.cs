@@ -65,8 +65,8 @@ namespace FileContainer
         {
             switch (pageSize)
             {
-                case < PagedContainerHeader.HEADER_PART:
-                    throw new ArgumentException($"PagedContainerHeader: PageSize must be >= {PagedContainerHeader.HEADER_PART} bytes (passed {pageSize} bytes)");
+                case < PagedContainerHeader.MIN_PAGE_SIZE:
+                    throw new ArgumentException($"PagedContainerHeader: PageSize must be >= {PagedContainerHeader.MIN_PAGE_SIZE} bytes (passed {pageSize} bytes)");
                 case > 128 * 1024:
                     throw new ArgumentException($"PagedContainerHeader: PageSize must be <= 128 KB (passed {pageSize} bytes)");
             }

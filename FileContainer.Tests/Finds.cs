@@ -8,7 +8,13 @@ namespace FileContainer.Tests
     public class TestFinds : TestBase
     {
         [Test]
-        public void Find_All() =>
+        [TestCase(0,                                            PersistentContainerCompressType.None)]
+        [TestCase(0,                                            PersistentContainerCompressType.GZip)]
+        [TestCase(0,                                            PersistentContainerCompressType.LZ4)]
+        [TestCase(PersistentContainerFlags.WriteDirImmediately, PersistentContainerCompressType.None)]
+        [TestCase(PersistentContainerFlags.WriteDirImmediately, PersistentContainerCompressType.GZip)]
+        [TestCase(PersistentContainerFlags.WriteDirImmediately, PersistentContainerCompressType.LZ4)]
+        public void Find_All(PersistentContainerFlags flags, PersistentContainerCompressType compressType) =>
             DoIt(factory =>
             {
                 Dictionary<string, byte[]> randomBlocks;
@@ -36,10 +42,16 @@ namespace FileContainer.Tests
                         Assert.IsTrue(item.Modified <= dt);
                     }
                 }
-            });
+            }, flags, compressType);
 
         [Test]
-        public void Find_Single() =>
+        [TestCase(0,                                            PersistentContainerCompressType.None)]
+        [TestCase(0,                                            PersistentContainerCompressType.GZip)]
+        [TestCase(0,                                            PersistentContainerCompressType.LZ4)]
+        [TestCase(PersistentContainerFlags.WriteDirImmediately, PersistentContainerCompressType.None)]
+        [TestCase(PersistentContainerFlags.WriteDirImmediately, PersistentContainerCompressType.GZip)]
+        [TestCase(PersistentContainerFlags.WriteDirImmediately, PersistentContainerCompressType.LZ4)]
+        public void Find_Single(PersistentContainerFlags flags, PersistentContainerCompressType compressType) =>
             DoIt(factory =>
             {
                 Dictionary<string, byte[]> randomBlocks;
@@ -67,10 +79,16 @@ namespace FileContainer.Tests
                         Assert.IsTrue(item.Modified <= dt);
                     }
                 }
-            });
+            }, flags, compressType);
 
         [Test]
-        public void Find_Multi() =>
+        [TestCase(0,                                            PersistentContainerCompressType.None)]
+        [TestCase(0,                                            PersistentContainerCompressType.GZip)]
+        [TestCase(0,                                            PersistentContainerCompressType.LZ4)]
+        [TestCase(PersistentContainerFlags.WriteDirImmediately, PersistentContainerCompressType.None)]
+        [TestCase(PersistentContainerFlags.WriteDirImmediately, PersistentContainerCompressType.GZip)]
+        [TestCase(PersistentContainerFlags.WriteDirImmediately, PersistentContainerCompressType.LZ4)]
+        public void Find_Multi(PersistentContainerFlags flags, PersistentContainerCompressType compressType) =>
             DoIt(factory =>
             {
                 Dictionary<string, byte[]> randomBlocks;
@@ -98,10 +116,16 @@ namespace FileContainer.Tests
                         Assert.IsTrue(item.Modified <= dt);
                     }
                 }
-            });
+            }, flags, compressType);
 
         [Test]
-        public void Find_NonExisting() =>
+        [TestCase(0,                                            PersistentContainerCompressType.None)]
+        [TestCase(0,                                            PersistentContainerCompressType.GZip)]
+        [TestCase(0,                                            PersistentContainerCompressType.LZ4)]
+        [TestCase(PersistentContainerFlags.WriteDirImmediately, PersistentContainerCompressType.None)]
+        [TestCase(PersistentContainerFlags.WriteDirImmediately, PersistentContainerCompressType.GZip)]
+        [TestCase(PersistentContainerFlags.WriteDirImmediately, PersistentContainerCompressType.LZ4)]
+        public void Find_NonExisting(PersistentContainerFlags flags, PersistentContainerCompressType compressType) =>
             DoIt(factory =>
             {
                 using (var store = factory())
@@ -113,6 +137,6 @@ namespace FileContainer.Tests
                     Assert.IsNotNull(r);
                     Assert.IsEmpty(r);
                 }
-            });
+            }, flags, compressType);
     }
 }

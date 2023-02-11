@@ -8,6 +8,9 @@ namespace FileContainer
 {
     public abstract partial class PagedContainerAbstract : IDisposable
     {
+        public const int MinPageSize = PagedContainerHeader.MIN_PAGE_SIZE;
+        public const int MaxPageSize = PagedContainerHeader.MAX_PAGE_SIZE;
+
         internal readonly Stream                        Stream;
         internal readonly PagedContainerHeader          Header;
         readonly          PageAllocator                 pageAllocator;
@@ -50,8 +53,8 @@ namespace FileContainer
                 }
 
                 entries = Header.DirectoryFirstPage == 0
-                    ? new PagedContainerEntryCollection()
-                    : new PagedContainerEntryCollection(Header, stm.ReadWithPageSequence(Header, Header.DirectoryFirstPage));
+                              ? new PagedContainerEntryCollection()
+                              : new PagedContainerEntryCollection(Header, stm.ReadWithPageSequence(Header, Header.DirectoryFirstPage));
             }
             catch
             {
@@ -97,8 +100,8 @@ namespace FileContainer
         /// </summary>
         public PagedContainerEntry[] Find(params string[] keys) =>
             (keys.Any()
-                ? entries.Find(keys)
-                : entries.All()).ToArray();
+                 ? entries.Find(keys)
+                 : entries.All()).ToArray();
 
         /// <summary>
         /// Remove entries by keys. Mask * and ? supported.

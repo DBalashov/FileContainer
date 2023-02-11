@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Security.Cryptography;
 
 namespace FileContainer.Tests
 {
@@ -9,7 +10,7 @@ namespace FileContainer.Tests
     {
         static readonly Random r = new(Guid.NewGuid().GetHashCode());
 
-        protected byte[] getRandomBytes(int count) => Enumerable.Range(0, count).Select(p => (byte)r.Next(255)).ToArray();
+        protected byte[] getRandomBytes(int count) => Enumerable.Range(0, count).Select(p => (byte) r.Next(255)).ToArray();
 
         protected Dictionary<string, byte[]> getRandomBlocks(int pageSize) =>
             new()
@@ -30,30 +31,31 @@ namespace FileContainer.Tests
         protected string                       fileName;
         readonly  List<PagedContainerAbstract> stores = new();
 
-        protected virtual void DoIt(Action<Func<PagedContainerAbstract>> action, PersistentContainerFlags flags = 0, PersistentContainerCompressType compressType = 0)
+        protected void DoIt(Action<Func<PagedContainerAbstract>> action, PersistentContainerFlags flags = 0, PersistentContainerCompressType compressType = 0)
         {
-            foreach (var pageSize in new[] { 32, 4096 }) // тест на два размера страниц (маленький и большой): 32 и 4096 байт
+            foreach (var pageSize in new[] {PagedContainerAbstract.MinPageSize, PagedContainerAbstract.MinPageSize * 8}) // тест на два размера страниц (маленький и большой)
                 try
                 {
                     fileName = Path.Combine(Path.GetTempPath(), "_Reads.kv");
                     if (File.Exists(fileName))
                         File.Delete(fileName);
 
+                    // file, non encrypted
                     action(() =>
-                    {
-                        var s = new PersistentContainer(fileName, new PersistentContainerSettings(pageSize, flags, compressType));
-                        stores.Add(s);
-                        return s;
-                    });
-
-
-                    var stm = new MemoryStream();
-                    action(() =>
-                    {
-                        var s = new InMemoryContainer(stm, new PersistentContainerSettings(pageSize, flags, compressType));
-                        stores.Add(s);
-                        return s;
-                    });
+                           {
+                               var s = new PersistentContainer(fileName, new PersistentContainerSettings(pageSize, flags, compressType));
+                               stores.Add(s);
+                               return s;
+                           });
+                    
+                    // in memory, non encrypted
+                    using (var stmNonEncrypted = new MemoryStream())
+                        action(() =>
+                               {
+                                   var s = new InMemoryContainer(stmNonEncrypted, new PersistentContainerSettings(pageSize, flags, compressType));
+                                   stores.Add(s);
+                                   return s;
+                               });
                 }
                 finally
                 {
