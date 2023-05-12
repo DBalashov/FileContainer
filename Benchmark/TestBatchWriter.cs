@@ -1,11 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using FileContainer;
 
 namespace Benchmark
 {
+    [ExcludeFromCodeCoverage]
     sealed class TestBatchWriter : TestAbstractWriter
     {
         public TestBatchWriter(string tempTestDirectory, Dictionary<string, byte[]> extractedFiles) : base(tempTestDirectory, extractedFiles)

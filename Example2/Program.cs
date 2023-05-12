@@ -1,10 +1,12 @@
 ﻿using System;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using FileContainer;
 
 namespace Example2
 {
+    [ExcludeFromCodeCoverage]
     class Program
     {
         static void Main(string[] args)

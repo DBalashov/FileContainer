@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
+using SpanByteExtenders;
 
 namespace FileContainer
 {
@@ -16,22 +17,21 @@ namespace FileContainer
             if (buff.Length == 0)
                 return r;
 
-            buff = handler.Unpack(buff).ToArray();
+            var span = handler.Unpack(buff);
 
-            var offset = 0;
-            var count  = buff.GetInt(ref offset);
+            var count = span.ReadInt32();
             for (var i = 0; i < count; i++)
             {
-                var firstPage        = buff.GetInt(ref offset); // 4 byte
-                var lastPage         = buff.GetInt(ref offset); // 4 byte
-                var rawLength        = buff.GetInt(ref offset); // 4 byte
-                var compressedLength = buff.GetInt(ref offset); // 4 byte
+                var firstPage        = span.ReadInt32();
+                var lastPage         = span.ReadInt32();
+                var rawLength        = span.ReadInt32();
+                var compressedLength = span.ReadInt32();
                 if (compressedLength == 0)
                     rawLength = compressedLength;
 
-                var modified = buff.GetInt(ref offset);    // 4 byte
-                var name     = buff.GetString(ref offset); // 2 byte length + 'length' bytes 
-                var flags    = (EntryFlags)buff[offset++]; // 1 byte
+                var modified = span.ReadInt32();
+                var name     = span.ReadPrefixedString(ReadStringPrefix.Short);
+                var flags    = (EntryFlags) span.ReadByte();
 
                 r.Add(name, new PagedContainerEntry(name, firstPage, lastPage, rawLength, compressedLength, flags, DT_FROM.AddSeconds(modified)));
             }

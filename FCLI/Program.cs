@@ -1,9 +1,11 @@
 ﻿using System;
+using System.Diagnostics.CodeAnalysis;
 using CommandLine;
 using CommandLine.Text;
 
 namespace FCLI
 {
+    [ExcludeFromCodeCoverage]
     partial class Program
     {
         static void Main(string[] args)

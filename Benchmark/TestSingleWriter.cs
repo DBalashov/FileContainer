@@ -1,12 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using FileContainer;
 
 namespace Benchmark
 {
+    [ExcludeFromCodeCoverage]
     sealed class TestSingleWriter : TestAbstractWriter
     {
         public TestSingleWriter(string tempTestDirectory, Dictionary<string, byte[]> extractedFiles) : base(tempTestDirectory, extractedFiles)

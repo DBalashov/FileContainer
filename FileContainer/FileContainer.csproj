@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <LangVersion>9</LangVersion>
+        <LangVersion>11</LangVersion>
         <RootNamespace>FileContainer</RootNamespace>
         <TargetFramework>net6.0</TargetFramework>
         <Nullable>enable</Nullable>
@@ -19,6 +19,7 @@
 
     <ItemGroup>
       <PackageReference Include="LZ4Codec" Version="2021.9.25" />
+      <PackageReference Include="SpanByteExtenders" Version="2023.5.11" />
     </ItemGroup>
 
 </Project>

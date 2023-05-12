@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using CommandLine;
 using FileContainer;
@@ -17,6 +18,7 @@ namespace FCLI
         }
     }
 
+    [ExcludeFromCodeCoverage]
     [Verb("create", HelpText = "Add or update container")]
     public class ActionCreateParams
     {

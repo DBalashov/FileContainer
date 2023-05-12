@@ -1,9 +1,11 @@
 ﻿using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 
 namespace Benchmark
 {
+    [ExcludeFromCodeCoverage]
     abstract class TestAbstractWriter
     {
         // static readonly int[] pageSizes  = { 128, 256, 512, 1024, 2048, 4096, 8192, 16384, 32768, 65536 };

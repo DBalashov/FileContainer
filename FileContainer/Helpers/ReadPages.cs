@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 
 namespace FileContainer
 {
@@ -12,46 +13,50 @@ namespace FileContainer
         /// </summary>
         internal static PageSequence ReadWithPageSequence(this Stream stm, PagedContainerHeader header, int startFromPage)
         {
-            using var stmCollector = new MemoryStream();
-
-            var pages = new List<int>();
-            var buff  = new byte[header.PageSize];
+            var listOfPages = new List<Memory<byte>>();
+            var pages       = new List<int>();
 
             while (startFromPage > 0)
             {
                 pages.Add(startFromPage);
+
                 stm.Position = startFromPage * header.PageSize;
+                var buff = new byte[header.PageSize]; // todo rent
                 stm.Read(buff, 0, header.PageSize);
 
-                stmCollector.Write(buff, 0, header.PageUserDataSize);
+                listOfPages.Add(buff.AsMemory(0, header.PageUserDataSize));
                 startFromPage = BitConverter.ToInt32(buff, header.PageUserDataSize);
             }
 
-            return new PageSequence(stmCollector.ToArray(), pages.ToArray());
+            var entirePages = mergeToArray(listOfPages);
+            return new PageSequence(entirePages, pages.ToArray());
         }
 
         /// <summary> Read data from pages, starting with entry.FirstPage </summary>
         internal static byte[] ReadEntryPageSequence(this Stream stm, PagedContainerHeader header, PagedContainerEntry entry)
         {
-            using var stmCollector = new MemoryStream(entry.Length); // todo replace with byte[]
+            var listOfPages = new List<Memory<byte>>();
 
             var remainLength     = entry.Flags.HasFlag(EntryFlags.Compressed) ? entry.CompressedLength : entry.Length;
             var currentPageIndex = entry.FirstPage;
-            var buff             = new byte[header.PageSize];
 
             while (currentPageIndex > 0)
             {
                 stm.Position = currentPageIndex * header.PageSize;
+
+                var buff = new byte[header.PageSize]; // todo rent
                 stm.Read(buff, 0, header.PageSize);
 
                 var requestLength = remainLength > header.PageUserDataSize ? header.PageUserDataSize : remainLength;
-                stmCollector.Write(buff, 0, requestLength);
+
+                listOfPages.Add(buff.AsMemory(0, requestLength));
                 remainLength -= requestLength;
 
                 currentPageIndex = BitConverter.ToInt32(buff, header.PageUserDataSize);
             }
 
-            return header.DataHandler.Unpack(stmCollector.ToArray()).ToArray();
+            var entirePages = mergeToArray(listOfPages);
+            return header.DataHandler.Unpack(entirePages).ToArray();
         }
 
         /// <summary>
@@ -76,6 +81,20 @@ namespace FileContainer
             }
 
             return pages.ToArray();
+        }
+
+        static byte[] mergeToArray(List<Memory<byte>> segments)
+        {
+            var accumulator = new byte[segments.Sum(p => p.Length)];
+            var offset      = 0;
+            
+            foreach (var page in segments)
+            {
+                page.CopyTo(accumulator.AsMemory(offset, page.Length));
+                offset += page.Length;
+            }
+
+            return accumulator;
         }
     }
 }

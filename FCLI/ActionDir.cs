@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using CommandLine;
@@ -38,6 +39,7 @@ namespace FCLI
         }
     }
 
+    [ExcludeFromCodeCoverage]
     [Verb("dir", HelpText = "Show directory of container")]
     public class ActionDirParams
     {

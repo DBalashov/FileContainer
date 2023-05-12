@@ -3,6 +3,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Text;
 using FileContainer.Encrypt;
+using SpanByteExtenders;
 
 namespace FileContainer
 {
@@ -50,22 +51,23 @@ namespace FileContainer
             var buff = new byte[HEADER_PART];
             stm.Read(buff, 0, buff.Length);
 
-            int offset = 0;
-            var sign   = buff.GetInt(ref offset); // 4 byte
+            var span   = buff.AsSpan();
+            
+            var sign   = span.ReadInt32();
             if (sign != SIGN)
                 throw new InvalidDataException($"PagedContainerHeader: File corruped (signature {sign:X}h invalid, must be {SIGN:X}h)");
 
-            PageSize         = buff.GetInt(ref offset); // 4 byte
+            PageSize         = span.ReadInt32();
             PageUserDataSize = PageSize - 4;
             Extenders.ValidatePageSize(PageSize);
 
-            DirectoryFirstPage = buff.GetInt(ref offset); // 4 byte
+            DirectoryFirstPage = span.ReadInt32();
             if (DirectoryFirstPage < 0)
                 throw new InvalidDataException($"PagedContainerHeader: DirectoryFirstPage has invalid value ({DirectoryFirstPage})");
 
-            Flags = (PersistentContainerFlags) (buff.GetUInt16(ref offset) & 0xFFFF);
+            Flags = (PersistentContainerFlags) span.ReadUInt16();
 
-            var flagsData = buff[offset];
+            var flagsData = span.ReadByte();
             CompressType = (PersistentContainerCompressType) flagsData;
             DataHandler  = getDataHandler(CompressType, encryptorDecryptor);
         }

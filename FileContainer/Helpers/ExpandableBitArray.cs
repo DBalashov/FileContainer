@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using System.Text;
 
 namespace FileContainer
@@ -136,12 +137,8 @@ namespace FileContainer
         }
 
         /// <summary> return internal representation of bits. Can be used in constructor for clone (for example) </summary>
-        public byte[] GetBytes()
-        {
-            var b = new byte[values.Length * BPV / 8];
-            Buffer.BlockCopy(values, 0, b, 0, b.Length);
-            return b;
-        }
+        public byte[] GetBytes() => 
+            MemoryMarshal.Cast<uint, byte>(values).ToArray();
 
         #region privates
 

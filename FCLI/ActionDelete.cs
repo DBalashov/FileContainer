@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using CommandLine;
@@ -25,6 +26,7 @@ namespace FCLI
         }
     }
 
+    [ExcludeFromCodeCoverage]
     [Verb("delete", HelpText = "Delete of entries")]
     public class ActionDeleteParams
     {
