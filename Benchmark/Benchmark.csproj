@@ -6,11 +6,19 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\FileContainer\FileContainer.csproj" />
+        <ProjectReference Include="..\FileContainer\FileContainer.csproj" />
     </ItemGroup>
 
     <ItemGroup>
-      <PackageReference Include="DotNetZip" Version="1.16.0" />
+        <PackageReference Include="DotNetZip" Version="1.16.0" />
+        <PackageReference Include="BenchmarkDotNet" Version="0.13.5" />
+
+    </ItemGroup>
+
+    <ItemGroup>
+      <Content Include="..\README.md">
+        <Link>README.md</Link>
+      </Content>
     </ItemGroup>
 
 </Project>
