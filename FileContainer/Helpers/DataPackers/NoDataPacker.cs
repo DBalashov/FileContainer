@@ -1,15 +1,14 @@
 using System;
 using FileContainer.Encrypt;
 
-namespace FileContainer
+namespace FileContainer;
+
+sealed class NoDataPacker : IDataPacker
 {
-    class NoDataPacker : IDataHandler
-    {
-        readonly IEncryptorDecryptor encryptorDecryptor;
+    readonly IEncryptorDecryptor encryptorDecryptor;
 
-        internal NoDataPacker(IEncryptorDecryptor encryptorDecryptor) => this.encryptorDecryptor = encryptorDecryptor;
+    internal NoDataPacker(IEncryptorDecryptor encryptorDecryptor) => this.encryptorDecryptor = encryptorDecryptor;
 
-        public Span<byte> Pack(Span<byte>   data) => encryptorDecryptor.Encrypt(data);
-        public Span<byte> Unpack(Span<byte> data) => encryptorDecryptor.Decrypt(data);
-    }
+    public Span<byte> Pack(Span<byte>   data) => encryptorDecryptor.Encrypt(data);
+    public Span<byte> Unpack(Span<byte> data) => encryptorDecryptor.Decrypt(data);
 }

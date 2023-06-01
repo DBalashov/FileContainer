@@ -3,98 +3,101 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 
-namespace FileContainer
+namespace FileContainer;
+
+static class ReadExtenders
 {
-    static class ReadExtenders
+    /// <summary>
+    /// Read data and page numbers, starting from 'startFromPage'
+    /// Used in PageAllocator & PagedContainerEntryCollection
+    /// </summary>
+    internal static PageSequence ReadWithPageSequence(this Stream stm, PagedContainerHeader header, int startFromPage)
     {
-        /// <summary>
-        /// Read data and page numbers, starting from 'startFromPage'
-        /// Used in PageAllocator & PagedContainerEntryCollection
-        /// </summary>
-        internal static PageSequence ReadWithPageSequence(this Stream stm, PagedContainerHeader header, int startFromPage)
+        var listOfPages = new List<Memory<byte>>();
+        var pages       = new List<int>();
+
+        while (startFromPage > 0)
         {
-            var listOfPages = new List<Memory<byte>>();
-            var pages       = new List<int>();
+            pages.Add(startFromPage);
 
-            while (startFromPage > 0)
-            {
-                pages.Add(startFromPage);
+            stm.Position = startFromPage * header.PageSize;
+            var buff = new byte[header.PageSize]; // todo rent
+            var read = stm.Read(buff, 0, header.PageSize);
+            if (read < header.PageSize)
+                throw new Exception("ReadWithPageSequence: Read less than expected, data corrupted");
 
-                stm.Position = startFromPage * header.PageSize;
-                var buff = new byte[header.PageSize]; // todo rent
-                stm.Read(buff, 0, header.PageSize);
-
-                listOfPages.Add(buff.AsMemory(0, header.PageUserDataSize));
-                startFromPage = BitConverter.ToInt32(buff, header.PageUserDataSize);
-            }
-
-            var entirePages = mergeToArray(listOfPages);
-            return new PageSequence(entirePages, pages.ToArray());
+            listOfPages.Add(buff.AsMemory(0, header.PageUserDataSize));
+            startFromPage = BitConverter.ToInt32(buff, header.PageUserDataSize);
         }
 
-        /// <summary> Read data from pages, starting with entry.FirstPage </summary>
-        internal static byte[] ReadEntryPageSequence(this Stream stm, PagedContainerHeader header, PagedContainerEntry entry)
+        var entirePages = mergeToArray(listOfPages);
+        return new PageSequence(entirePages, pages.ToArray());
+    }
+
+    /// <summary> Read data from pages, starting with entry.FirstPage </summary>
+    internal static byte[] ReadEntryPageSequence(this Stream stm, PagedContainerHeader header, PagedContainerEntry entry)
+    {
+        var listOfPages = new List<Memory<byte>>();
+
+        var remainLength     = entry.Flags.HasFlag(EntryFlags.Compressed) ? entry.CompressedLength : entry.Length;
+        var currentPageIndex = entry.FirstPage;
+
+        while (currentPageIndex > 0)
         {
-            var listOfPages = new List<Memory<byte>>();
+            stm.Position = currentPageIndex * header.PageSize;
 
-            var remainLength     = entry.Flags.HasFlag(EntryFlags.Compressed) ? entry.CompressedLength : entry.Length;
-            var currentPageIndex = entry.FirstPage;
+            var buff = new byte[header.PageSize]; // todo rent
+            var read = stm.Read(buff, 0, header.PageSize);
+            if (read < header.PageSize)
+                throw new Exception("ReadEntryPageSequence: Read less than expected, data corrupted");
 
-            while (currentPageIndex > 0)
-            {
-                stm.Position = currentPageIndex * header.PageSize;
+            var requestLength = remainLength > header.PageUserDataSize ? header.PageUserDataSize : remainLength;
 
-                var buff = new byte[header.PageSize]; // todo rent
-                stm.Read(buff, 0, header.PageSize);
+            listOfPages.Add(buff.AsMemory(0, requestLength));
+            remainLength -= requestLength;
 
-                var requestLength = remainLength > header.PageUserDataSize ? header.PageUserDataSize : remainLength;
-
-                listOfPages.Add(buff.AsMemory(0, requestLength));
-                remainLength -= requestLength;
-
-                currentPageIndex = BitConverter.ToInt32(buff, header.PageUserDataSize);
-            }
-
-            var entirePages = mergeToArray(listOfPages);
-            return header.DataHandler.Unpack(entirePages).ToArray();
+            currentPageIndex = BitConverter.ToInt32(buff, header.PageUserDataSize);
         }
 
-        /// <summary>
-        /// Read only sequence page numbers from 'startFromPage'.
-        /// Last 32 bit contain next page index.
-        /// Last page in sequence contain 'next page index' value == 0
-        /// </summary>
-        internal static int[] ReadPageSequence(this Stream stm, PagedContainerHeader header, int startFromPage)
+        var entirePages = mergeToArray(listOfPages);
+        return header.DataHandler.Unpack(entirePages).ToArray();
+    }
+
+    /// <summary>
+    /// Read only sequence page numbers from 'startFromPage'.
+    /// Last 32 bit contain next page index.
+    /// Last page in sequence contain 'next page index' value == 0
+    /// </summary>
+    internal static int[] ReadPageSequence(this Stream stm, PagedContainerHeader header, int startFromPage)
+    {
+        var pages            = new List<int>();
+        var buff             = new byte[4];
+        var currentPageIndex = startFromPage;
+        while (currentPageIndex > 0)
         {
-            var pages = new List<int>();
+            pages.Add(currentPageIndex);
 
-            var buff             = new byte[4];
-            var currentPageIndex = startFromPage;
-            while (currentPageIndex > 0)
-            {
-                pages.Add(currentPageIndex);
+            stm.Position = currentPageIndex * header.PageSize + header.PageUserDataSize;
+            var read = stm.Read(buff, 0, buff.Length);
+            if (read < buff.Length) break;
 
-                stm.Position = currentPageIndex * header.PageSize + header.PageUserDataSize;
-                stm.Read(buff, 0, 4);
-
-                currentPageIndex = BitConverter.ToInt32(buff, 0);
-            }
-
-            return pages.ToArray();
+            currentPageIndex = BitConverter.ToInt32(buff, 0);
         }
 
-        static byte[] mergeToArray(List<Memory<byte>> segments)
-        {
-            var accumulator = new byte[segments.Sum(p => p.Length)];
-            var offset      = 0;
-            
-            foreach (var page in segments)
-            {
-                page.CopyTo(accumulator.AsMemory(offset, page.Length));
-                offset += page.Length;
-            }
+        return pages.ToArray();
+    }
 
-            return accumulator;
+    static byte[] mergeToArray(List<Memory<byte>> segments)
+    {
+        var accumulator = new byte[segments.Sum(p => p.Length)];
+        var offset      = 0;
+
+        foreach (var page in segments)
+        {
+            page.CopyTo(accumulator.AsMemory(offset, page.Length));
+            offset += page.Length;
         }
+
+        return accumulator;
     }
 }

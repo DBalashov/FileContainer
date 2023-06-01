@@ -2,8 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Security.Cryptography;
-using System.Threading;
 
 namespace FileContainer.Tests
 {
@@ -29,10 +27,10 @@ namespace FileContainer.Tests
                 ["dir/fileB6.txt"] = getRandomBytes(pageSize * 100 + 1), // 100*(pageSize-4)+1   => 101 pages (1 byte at last page)
             };
 
-        readonly List<PagedContainerAbstract> stores = new();
-
         protected void DoIt(Action<Func<PagedContainerAbstract>> action, PersistentContainerFlags flags = 0, PersistentContainerCompressType compressType = 0)
         {
+            var stores = new List<PagedContainerAbstract>();
+            
             // test with two page sizes (small & large)
             foreach (var pageSize in new[] {PagedContainerAbstract.MinPageSize, PagedContainerAbstract.MinPageSize * 8})
             {
@@ -58,10 +56,16 @@ namespace FileContainer.Tests
                 }
                 finally
                 {
-                    foreach (var s in stores) s.Dispose();
-                    stores.Clear();
-
-                    if (File.Exists(file1)) File.Delete(file1);
+                    try
+                    {
+                        foreach (var s in stores) s.Dispose();
+                        stores.Clear();
+                        if (File.Exists(file1)) File.Delete(file1);
+                    }
+                    catch
+                    {
+                        
+                    }
                 }
             }
         }

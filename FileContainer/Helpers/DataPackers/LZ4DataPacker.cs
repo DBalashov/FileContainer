@@ -2,15 +2,15 @@ using System;
 using FileContainer.Encrypt;
 using LZ4;
 
-namespace FileContainer
+namespace FileContainer;
+
+sealed class LZ4DataPacker : IDataPacker
 {
-    sealed class LZ4DataPacker : IDataHandler
-    {
-        readonly IEncryptorDecryptor encryptorDecryptor;
+    readonly IEncryptorDecryptor encryptorDecryptor;
 
-        internal LZ4DataPacker(IEncryptorDecryptor encryptorDecryptor) => this.encryptorDecryptor = encryptorDecryptor;
+    internal LZ4DataPacker(IEncryptorDecryptor encryptorDecryptor) => this.encryptorDecryptor = encryptorDecryptor;
 
-        public Span<byte> Pack(Span<byte>   data) => encryptorDecryptor.Encrypt(data.PackLZ4());
-        public Span<byte> Unpack(Span<byte> data) => encryptorDecryptor.Decrypt(data).UnpackLZ4();
-    }
+    public Span<byte> Pack(Span<byte> data) => encryptorDecryptor.Encrypt(data.PackLZ4());
+
+    public Span<byte> Unpack(Span<byte> data) => encryptorDecryptor.Decrypt(data).UnpackLZ4();
 }

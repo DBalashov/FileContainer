@@ -5,10 +5,17 @@
         <RootNamespace>FileContainer</RootNamespace>
         <TargetFramework>net6.0</TargetFramework>
         <Nullable>enable</Nullable>
-    </PropertyGroup>
-
-    <PropertyGroup>
-        <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+        <AssemblyName>FileContainer</AssemblyName>
+        <PackageId>FileContainer</PackageId>
+        <GeneratePackageOnBuild>False</GeneratePackageOnBuild>
+        <Version>2023.5.25.0</Version>
+        <AssemblyVersion>$(Version)</AssemblyVersion>
+        <FileVersion>$(Version)</FileVersion>
+        <Description>Key/value file container. MIT License</Description>
+        <Authors>Denis Balashov and contributors</Authors>
+        <RepositoryUrl>https://github.com/DBalashov/FileContainer</RepositoryUrl>
+        <Copyright>Denis Balashov © 2020-2023, dbalashov@gmail.com</Copyright>
+        <PackageTags>C#,FileContainer,keyvalue,key-value,storage</PackageTags>
     </PropertyGroup>
 
     <ItemGroup>
@@ -18,8 +25,8 @@
     </ItemGroup>
 
     <ItemGroup>
-      <PackageReference Include="LZ4Codec" Version="2021.9.25" />
-      <PackageReference Include="SpanByteExtenders" Version="2023.5.11" />
+      <PackageReference Include="LZ4Codec" Version="2023.5.28" />
+      <PackageReference Include="SpanByteExtenders" Version="2023.5.31" />
     </ItemGroup>
 
 </Project>
