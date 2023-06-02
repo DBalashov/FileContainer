@@ -36,10 +36,8 @@ sealed class PagedContainerEntryCollection
     {
         var targetPages = pages;
 
-        var buff = entries.WriteEntries(header.DataHandler);
-
+        var buff          = entries.WriteEntries(header.DataHandler);
         var requiredPages = header.GetRequiredPages(buff.Length);
-
         if (requiredPages > targetPages.Length) // need to allocate additional pages?
         {
             targetPages = targetPages.Concat(pageAllocator.AllocatePages(requiredPages - targetPages.Length)).ToArray();
@@ -68,7 +66,7 @@ sealed class PagedContainerEntryCollection
 
     public bool TryGet(string key, out PagedContainerEntry? item) =>
         string.IsNullOrEmpty(key)
-            ? throw new ArgumentException("Argument can't be null or empty", nameof(key))
+            ? throw new ArgumentNullException(nameof(key), "Argument can't be null or empty")
             : entries.TryGetValue(key, out item);
 
     public void Add(PagedContainerEntry entry)
@@ -102,7 +100,7 @@ sealed class PagedContainerEntryCollection
 
         foreach (var key in keys)
             if (string.IsNullOrEmpty(key))
-                throw new ArgumentException("Argument can't be null or empty", nameof(keys));
+                throw new ArgumentNullException(nameof(keys), "Argument can't be null or empty");
 
         foreach (var key in keys)
         {

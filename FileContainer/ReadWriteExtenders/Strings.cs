@@ -20,7 +20,8 @@ public static partial class ReadWriteExtenders
 
     /// <summary> Get entries by keys. Mask chars * and ? supported in keys </summary>
     public static Dictionary<string, string> GetString(this PagedContainerAbstract c, params string[] keys) =>
-        c.Get(keys).ToDictionary(p => p.Key, p => defaultEncoding.GetString(p.Value), StringComparer.InvariantCultureIgnoreCase);
+        c.Get(keys).ToDictionary(p => p.Key,
+                                 p => defaultEncoding.GetString(p.Value), StringComparer.InvariantCultureIgnoreCase);
 
     #endregion
 
@@ -28,13 +29,10 @@ public static partial class ReadWriteExtenders
 
     /// <summary> Create or replace entry with specified key </summary>
     /// <exception cref="ArgumentException"></exception>
-    public static PutAppendResult Put(this PagedContainerAbstract c, string key, string data)
-    {
-        if (string.IsNullOrEmpty(data))
-            throw new ArgumentException("Argument can't be null or empty", nameof(data));
-
-        return c.Put(key, defaultEncoding.GetBytes(data));
-    }
+    public static PutAppendResult Put(this PagedContainerAbstract c, string key, string data) =>
+        string.IsNullOrEmpty(data)
+            ? throw new ArgumentNullException(nameof(data), "Argument can't be null or empty")
+            : c.Put(key, defaultEncoding.GetBytes(data));
 
     /// <summary>
     /// Create or replace of passed entries.
@@ -43,15 +41,7 @@ public static partial class ReadWriteExtenders
     /// <exception cref="ArgumentException"></exception>
     public static Dictionary<string, PutAppendResult> Put(this PagedContainerAbstract c, Dictionary<string, string> keyValues)
     {
-        foreach (var item in keyValues)
-        {
-            if (string.IsNullOrEmpty(item.Key))
-                throw new ArgumentException("Argument can't be null or empty", nameof(keyValues));
-
-            if (string.IsNullOrEmpty(item.Value))
-                throw new ArgumentException($"Argument can't be null or empty: {item.Key}", nameof(keyValues));
-        }
-
+        checkDictionary(keyValues);
         return c.Put(keyValues.ToDictionary(p => p.Key, p => defaultEncoding.GetBytes(p.Value), StringComparer.InvariantCultureIgnoreCase));
     }
 
@@ -59,28 +49,29 @@ public static partial class ReadWriteExtenders
 
     #region Append
 
-    public static PutAppendResult Append(this PagedContainerAbstract c, string key, string data)
-    {
-        if (string.IsNullOrEmpty(data))
-            throw new ArgumentException("Argument can't be null or empty", nameof(data));
-
-        return c.Append(key, defaultEncoding.GetBytes(data));
-    }
+    public static PutAppendResult Append(this PagedContainerAbstract c, string key, string data) =>
+        string.IsNullOrEmpty(data)
+            ? throw new ArgumentNullException(nameof(data), "Argument can't be null or empty")
+            : c.Append(key, defaultEncoding.GetBytes(data));
 
 
     public static Dictionary<string, PutAppendResult> Append(this PagedContainerAbstract c, Dictionary<string, string> keyValues)
     {
-        foreach (var item in keyValues)
-        {
-            if (string.IsNullOrEmpty(item.Key))
-                throw new ArgumentException("Argument can't be null or empty", nameof(keyValues));
-
-            if (string.IsNullOrEmpty(item.Value))
-                throw new ArgumentException($"Argument can't be null or empty: {item.Key}", nameof(keyValues));
-        }
-
+        checkDictionary(keyValues);
         return c.Append(keyValues.ToDictionary(p => p.Key, p => defaultEncoding.GetBytes(p.Value), StringComparer.InvariantCultureIgnoreCase));
     }
 
     #endregion
+
+    static void checkDictionary(Dictionary<string, string> keyValues)
+    {
+        foreach (var item in keyValues)
+        {
+            if (string.IsNullOrEmpty(item.Key))
+                throw new ArgumentNullException(nameof(keyValues), "Argument can't be null or empty");
+
+            if (string.IsNullOrEmpty(item.Value))
+                throw new ArgumentNullException(nameof(keyValues), $"Argument can't be null or empty: {item.Key}");
+        }
+    }
 }

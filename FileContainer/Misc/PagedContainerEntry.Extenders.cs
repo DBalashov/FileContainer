@@ -43,7 +43,7 @@ static class PagedContainerEntryExtenders
     {
         var requiredBufferLength = 4 + (entries.Any()
                                             ? entries.Sum(c => 4                                              + 4 + 4 + 4 + 4 +
-                                                               (2 + Encoding.UTF8.GetByteCount(c.Value.Name)) +
+                                                               (2 + Encoding.UTF8.GetByteCount(c.Value.Name)) + // prefixed string
                                                                1)
                                             : 0);
         var buff = new byte[requiredBufferLength];

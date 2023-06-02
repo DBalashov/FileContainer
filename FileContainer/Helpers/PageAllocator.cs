@@ -72,7 +72,7 @@ sealed class PageAllocator
             r[counter++] = pageIndex;
 
         var additionalPages = count - counter;
-        if (additionalPages > 0) // запрашиваемых страниц больше, чем есть в pageAllocations -> увеличиваем его емкость на эту разницу * PAGE_ALLOC_MULTIPLIER
+        if (additionalPages > 0) // requested pages (additionalPages) more than exists in pageAllocations -> expand pageAllocations on (additionalPages*PAGE_ALLOC_MULTIPLIER) pages
         {
             pageAllocations.ResizeTo(pageAllocations.Length + additionalPages * PAGE_ALLOC_MULTIPLIER);
 

@@ -71,7 +71,7 @@ public class EntryReadonlyStream : Stream
     public override long Seek(long offset, SeekOrigin origin)
     {
         if (offset < 0)
-            throw new ArgumentException("Parameter can't be negative", nameof(offset));
+            throw new ArgumentException("Parameter must be >=0", nameof(offset));
 
         Position = origin switch
                    {

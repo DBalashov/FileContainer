@@ -15,7 +15,7 @@ static class ReadExtenders
     {
         var listOfPages = new List<Memory<byte>>();
         var pages       = new List<int>();
-
+        
         while (startFromPage > 0)
         {
             pages.Add(startFromPage);

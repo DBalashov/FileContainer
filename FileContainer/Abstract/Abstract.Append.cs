@@ -9,11 +9,9 @@ public abstract partial class PagedContainerAbstract
     /// <summary> Append data to end of existing entry. If entry doesn't exists - create new with passed data </summary>
     public virtual PutAppendResult Append(string key, byte[] data)
     {
-        if (key == null)
-            throw new ArgumentException("Argument can't be null", nameof(data));
-
-        if (data == null)
-            throw new ArgumentException("Argument can't be null", nameof(data));
+        if (string.IsNullOrEmpty(key))
+            throw new ArgumentNullException(nameof(key), "Argument can't be null");
+        ArgumentNullException.ThrowIfNull(data);
 
         throwIfHasOpenedStream(new[] {key});
         if (key.ContainMask())
@@ -30,9 +28,7 @@ public abstract partial class PagedContainerAbstract
     /// <summary> Append data to end of passed entries. Create non-existing entries with passed data. Mask in keys not allowed. </summary>
     public virtual Dictionary<string, PutAppendResult> Append(Dictionary<string, byte[]> keyValues)
     {
-        if (keyValues == null)
-            throw new ArgumentException("Argument can't be null", nameof(keyValues));
-
+        ArgumentNullException.ThrowIfNull(keyValues);
         if (!keyValues.Any())
             return new Dictionary<string, PutAppendResult>();
 
@@ -40,10 +36,10 @@ public abstract partial class PagedContainerAbstract
         foreach (var item in keyValues)
         {
             if (string.IsNullOrEmpty(item.Key))
-                throw new ArgumentException("Argument can't be null or empty", nameof(keyValues));
+                throw new ArgumentNullException(nameof(keyValues));
 
             if (item.Value == null || item.Value.Length == 0)
-                throw new ArgumentException($"Argument can't be null or empty {item.Key}", nameof(keyValues));
+                throw new ArgumentNullException(nameof(keyValues), $"Argument can't be null or empty {item.Key}");
 
             if (item.Key.ContainMask())
                 throw new ArgumentException($"Invalid name: {item.Key}");

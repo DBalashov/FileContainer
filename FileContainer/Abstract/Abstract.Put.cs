@@ -11,10 +11,10 @@ public abstract partial class PagedContainerAbstract
     public virtual PutAppendResult Put(string key, byte[] data)
     {
         if (string.IsNullOrEmpty(key))
-            throw new ArgumentException("Argument can't be null or empty", nameof(key));
+            throw new ArgumentNullException(nameof(key));
 
         if (data == null || data.Length == 0)
-            throw new ArgumentException("Argument can't be null or empty", nameof(data));
+            throw new ArgumentNullException(nameof(data), "Argument can't be null or empty");
 
         throwIfHasOpenedStream(new[] {key});
         if (key.ContainMask())
@@ -39,10 +39,10 @@ public abstract partial class PagedContainerAbstract
         foreach (var item in keyValues)
         {
             if (string.IsNullOrEmpty(item.Key))
-                throw new ArgumentException("Argument can't be null or empty", nameof(keyValues));
+                throw new ArgumentNullException(nameof(keyValues), "Argument can't be null or empty");
 
             if (item.Value == null || item.Value.Length == 0)
-                throw new ArgumentException($"Argument can't be null or empty: {item.Key}", nameof(keyValues));
+                throw new ArgumentNullException(nameof(keyValues), $"Argument can't be null or empty: {item.Key}");
 
             if (item.Key.ContainMask())
                 throw new ArgumentException($"Invalid name: {item.Key}");

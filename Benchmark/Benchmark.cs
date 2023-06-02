@@ -12,8 +12,8 @@ using FileContainer;
 namespace Benchmark;
 
 [SimpleJob(RuntimeMoniker.Net70, baseline: true)]
-[WarmupCount(3)]
-[IterationCount(3)]
+[WarmupCount(1)]
+[IterationCount(1)]
 [MemoryDiagnoser]
 [Config(typeof(Config))]
 public class MainTest
@@ -24,16 +24,16 @@ public class MainTest
     static Dictionary<string, byte[]> entries;
     BenchmarkData                     benchmarkData = new(0, 0);
 
-    [Params(1, 5, 10, 25)]
+    [Params(1)] //, 5, 10, 25)]
     public int BatchSize { get; set; }
     
-    [Params(256, 512, 2048, 8192, 32768)]
+    [Params(256, 512, 2048)] //, 8192, 32768)]
     public int PageSize { get; set; }
 
     [Params(0, PersistentContainerFlags.WriteDirImmediately)]
     public PersistentContainerFlags Flags { get; set; }
 
-    [Params(PersistentContainerCompressType.None, PersistentContainerCompressType.GZip, PersistentContainerCompressType.LZ4)]
+    [Params(PersistentContainerCompressType.None)] //, PersistentContainerCompressType.GZip, PersistentContainerCompressType.LZ4)]
     public PersistentContainerCompressType Compress { get; set; }
 
     #region Setup / Cleanup
