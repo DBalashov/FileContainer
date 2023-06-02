@@ -1,5 +1,4 @@
 using System;
-using System.IO;
 using System.IO.Compression;
 using FileContainer.Encrypt;
 
@@ -15,7 +14,7 @@ sealed class GZipDataPacker : IDataPacker
 
     public Span<byte> Pack(Span<byte> data)
     {
-        using var stm = new MemoryStream();
+        using var stm = MemoryStreamManager.Instance.GetStream(); // new MemoryStream();
         using (var gz = new GZipStream(stm, CompressionMode.Compress, true))
         {
             gz.Write(data);
@@ -27,8 +26,8 @@ sealed class GZipDataPacker : IDataPacker
 
     public Span<byte> Unpack(Span<byte> data)
     {
-        using var stm = new MemoryStream();
-        using (var st1 = new MemoryStream())
+        using var stm = MemoryStreamManager.Instance.GetStream();
+        using (var st1 = MemoryStreamManager.Instance.GetStream())
         {
             st1.Write(encryptorDecryptor.Decrypt(data));
             st1.Position = 0;

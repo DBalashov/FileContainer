@@ -1,5 +1,4 @@
 using System;
-using System.IO;
 using System.Security.Cryptography;
 
 namespace FileContainer.Encrypt;
@@ -12,7 +11,7 @@ sealed class Symmetric : IEncryptorDecryptor
 
     public Span<byte> Encrypt(Span<byte> data)
     {
-        using var stm = new MemoryStream();
+        using var stm = MemoryStreamManager.Instance.GetStream();
         stm.Write(BitConverter.GetBytes(data.Length), 0, 4);
 
         using (var encryptor = algo.CreateEncryptor())
@@ -32,7 +31,7 @@ sealed class Symmetric : IEncryptorDecryptor
         var resultDataLength = BitConverter.ToInt32(data);
         var buff             = new byte[resultDataLength];
 
-        using var ms = new MemoryStream();
+        using var ms = MemoryStreamManager.Instance.GetStream();
         ms.Write(data.Slice(4));
         ms.Position = 0;
 

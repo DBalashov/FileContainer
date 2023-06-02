@@ -26,6 +26,7 @@
 
     <ItemGroup>
       <PackageReference Include="LZ4Codec" Version="2023.5.28" />
+      <PackageReference Include="Microsoft.IO.RecyclableMemoryStream" Version="2.3.2" />
       <PackageReference Include="SpanByteExtenders" Version="2023.5.31" />
     </ItemGroup>
 
