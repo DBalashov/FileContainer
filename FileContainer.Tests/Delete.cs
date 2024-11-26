@@ -1,4 +1,3 @@
-using System;
 using NUnit.Framework;
 
 namespace FileContainer.Tests
@@ -23,8 +22,8 @@ namespace FileContainer.Tests
 
                      using (var store = factory())
                      {
-                         Assert.IsNull(store.Get("dir/file01.txt"));
-                         Assert.IsEmpty(store.Find("dir/file01.txt"));
+                         Assert.That(store.Get("dir/file01.txt")         == null);
+                         Assert.That(store.Find("dir/file01.txt").Length == 0);
                      }
                  }, flags, compressType);
 
@@ -46,8 +45,8 @@ namespace FileContainer.Tests
 
                      using (var store = factory())
                      {
-                         Assert.IsNull(store.Get("dir/fileA*"));
-                         Assert.IsEmpty(store.Find("dir/fileA*"));
+                         Assert.That(store.Get("dir/fileA*")         == null);
+                         Assert.That(store.Find("dir/fileA*").Length == 0);
                      }
                  }, flags, compressType);
 
@@ -67,8 +66,7 @@ namespace FileContainer.Tests
                      using (var store = factory())
                      {
                          var r = store.Delete("aaa");
-                         Assert.IsNotNull(r);
-                         Assert.IsEmpty(r);
+                         Assert.That(r.Length == 0);
                      }
                  }, flags, compressType);
 
@@ -88,8 +86,7 @@ namespace FileContainer.Tests
                      using (var store = factory())
                      {
                          var r = store.Delete("aaa", "bbb");
-                         Assert.IsNotNull(r);
-                         Assert.IsEmpty(r);
+                         Assert.That(r.Length == 0);
                      }
                  }, flags, compressType);
     }

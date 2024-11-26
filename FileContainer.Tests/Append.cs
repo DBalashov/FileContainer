@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using NUnit.Framework;
@@ -35,11 +34,11 @@ namespace FileContainer.Tests
                          foreach (var item in randomBlocks)
                              r.Add(item.Key, store.Get(item.Key));
 
-                         Assert.IsTrue(r.Keys.OrderBy(p => p).ToArray().SequenceEqual(randomBlocks.OrderBy(p => p.Key).Select(p => p.Key).ToArray()));
+                         Assert.That(r.Keys.OrderBy(p => p).ToArray().SequenceEqual(randomBlocks.OrderBy(p => p.Key).Select(p => p.Key).ToArray()));
                          foreach (var item in r)
                          {
-                             Assert.NotNull(item.Value);
-                             Assert.IsTrue(item.Value.SequenceEqual(r[item.Key]));
+                             Assert.That(item.Value != null);
+                             Assert.That(item.Value!.SequenceEqual(r[item.Key]));
                          }
                      }
                  }, flags, compression);
@@ -69,12 +68,11 @@ namespace FileContainer.Tests
 
                          var r = store.Get(randomBlocks.Keys.ToArray());
 
-                         Assert.IsTrue(r.Keys.OrderBy(p => p).ToArray()
-                                        .SequenceEqual(randomBlocks.OrderBy(p => p.Key).Select(p => p.Key).ToArray()));
+                         Assert.That(r.Keys.OrderBy(p => p).ToArray().SequenceEqual(randomBlocks.OrderBy(p => p.Key).Select(p => p.Key).ToArray()));
                          foreach (var item in r)
                          {
-                             Assert.NotNull(item.Value);
-                             Assert.IsTrue(item.Value.SequenceEqual(r[item.Key]));
+                             Assert.That(item.Value != null);
+                             Assert.That(item.Value!.SequenceEqual(r[item.Key]));
                          }
                      }
                  }, flags, compression);

@@ -3,18 +3,18 @@
     <PropertyGroup>
         <LangVersion>11</LangVersion>
         <RootNamespace>FileContainer</RootNamespace>
-        <TargetFramework>net6.0</TargetFramework>
+        <TargetFrameworks>net6.0;net7.0;net8.0;net9.0</TargetFrameworks>
         <Nullable>enable</Nullable>
         <AssemblyName>FileContainer</AssemblyName>
         <PackageId>FileContainer</PackageId>
         <GeneratePackageOnBuild>False</GeneratePackageOnBuild>
-        <Version>2023.5.25.0</Version>
+        <Version>2024.11.26.0</Version>
         <AssemblyVersion>$(Version)</AssemblyVersion>
         <FileVersion>$(Version)</FileVersion>
         <Description>Key/value file container. MIT License</Description>
         <Authors>Denis Balashov and contributors</Authors>
         <RepositoryUrl>https://github.com/DBalashov/FileContainer</RepositoryUrl>
-        <Copyright>Denis Balashov © 2020-2023, dbalashov@gmail.com</Copyright>
+        <Copyright>Denis Balashov © 2020-2024, dbalashov@gmail.com</Copyright>
         <PackageTags>C#,FileContainer,keyvalue,key-value,storage</PackageTags>
     </PropertyGroup>
 
@@ -25,9 +25,9 @@
     </ItemGroup>
 
     <ItemGroup>
-      <PackageReference Include="LZ4Codec" Version="2023.5.28" />
-      <PackageReference Include="Microsoft.IO.RecyclableMemoryStream" Version="2.3.2" />
-      <PackageReference Include="SpanByteExtenders" Version="2023.5.31" />
+      <PackageReference Include="LZ4Codec" Version="2024.11.26" />
+      <PackageReference Include="Microsoft.IO.RecyclableMemoryStream" Version="3.0.1" />
+      <PackageReference Include="SpanByteExtenders" Version="2024.11.26" />
     </ItemGroup>
 
 </Project>
