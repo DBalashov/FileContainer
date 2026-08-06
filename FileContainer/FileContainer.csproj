@@ -8,7 +8,7 @@
         <AssemblyName>FileContainer</AssemblyName>
         <PackageId>FileContainer</PackageId>
         <GeneratePackageOnBuild>False</GeneratePackageOnBuild>
-        <Version>2024.11.26.0</Version>
+        <Version>2026.8.6.0</Version>
         <AssemblyVersion>$(Version)</AssemblyVersion>
         <FileVersion>$(Version)</FileVersion>
         <Description>Key/value file container. MIT License</Description>
