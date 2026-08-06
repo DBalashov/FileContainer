@@ -39,7 +39,7 @@ static class PagedContainerEntryExtenders
         return r;
     }
 
-    internal static byte[] WriteEntries(this Dictionary<string, PagedContainerEntry> entries, IDataPacker handler)
+    internal static Span<byte> WriteEntries(this Dictionary<string, PagedContainerEntry> entries, IDataPacker handler)
     {
         var requiredBufferLength = 4 + (entries.Any()
                                             ? entries.Sum(c => 4                                              + 4 + 4 + 4 + 4 +
@@ -65,6 +65,6 @@ static class PagedContainerEntryExtenders
             span.Write((byte) entry.Flags);                                  // 1 byte
         }
 
-        return handler.Pack(buff).ToArray();
+        return handler.Pack(buff);
     }
 }

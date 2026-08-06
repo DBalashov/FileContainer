@@ -11,7 +11,7 @@ using FileContainer;
 
 namespace Benchmark;
 
-[SimpleJob(RuntimeMoniker.Net90, baseline: true)]
+[SimpleJob(RuntimeMoniker.Net10_0, baseline: true)]
 [WarmupCount(3)]
 [IterationCount(3)]
 [MemoryDiagnoser]

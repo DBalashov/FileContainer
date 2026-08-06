@@ -1,4 +1,5 @@
 using System;
+using System.Buffers;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -13,21 +14,36 @@ static class ReadExtenders
     /// </summary>
     internal static PageSequence ReadWithPageSequence(this Stream stm, PagedContainerHeader header, int startFromPage)
     {
-        var listOfPages = new List<Memory<byte>>();
+        var listOfPages = new List<byte[]>();
         var pages       = new List<int>();
+
+        var pool = ArrayPool<byte>.Shared;
         
-        while (startFromPage > 0)
+        try
         {
-            pages.Add(startFromPage);
+            while (startFromPage > 0)
+            {
+                pages.Add(startFromPage);
 
-            stm.Position = startFromPage * header.PageSize;
-            var buff = new byte[header.PageSize]; // todo rent
-            var read = stm.Read(buff, 0, header.PageSize);
-            if (read < header.PageSize)
-                throw new Exception("ReadWithPageSequence: Read less than expected, data corrupted");
+                stm.Position = (long)startFromPage * header.PageSize;
+                var buff = pool.Rent(header.PageSize);
+                var read = stm.Read(buff, 0, header.PageSize);
+                if (read < header.PageSize)
+                    throw new Exception("ReadWithPageSequence: Read less than expected, data corrupted");
 
-            listOfPages.Add(buff.AsMemory(0, header.PageUserDataSize));
-            startFromPage = BitConverter.ToInt32(buff, header.PageUserDataSize);
+                var data = new byte[header.PageUserDataSize];
+                Array.Copy(buff, 0, data, 0, header.PageUserDataSize);
+                listOfPages.Add(data);
+                
+                startFromPage = BitConverter.ToInt32(buff, header.PageUserDataSize);
+                pool.Return(buff);
+            }
+        }
+        catch
+        {
+            // In case of error, we don't have an easy way to return already rented buffers if we didn't store them carefully.
+            // But here we return them immediately after use except for the case where we copy data out.
+            throw;
         }
 
         var entirePages = mergeToArray(listOfPages);
@@ -37,29 +53,37 @@ static class ReadExtenders
     /// <summary> Read data from pages, starting with entry.FirstPage </summary>
     internal static byte[] ReadEntryPageSequence(this Stream stm, PagedContainerHeader header, PagedContainerEntry entry)
     {
-        var listOfPages = new List<Memory<byte>>();
-
         var remainLength     = entry.Flags.HasFlag(EntryFlags.Compressed) ? entry.CompressedLength : entry.Length;
         var currentPageIndex = entry.FirstPage;
 
-        while (currentPageIndex > 0)
+        var pool = ArrayPool<byte>.Shared;
+        var buff = pool.Rent(header.PageSize);
+        
+        using var resultStream = MemoryStreamManager.Instance.GetStream();
+        try
         {
-            stm.Position = currentPageIndex * header.PageSize;
+            while (currentPageIndex > 0)
+            {
+                stm.Position = (long)currentPageIndex * header.PageSize;
 
-            var buff = new byte[header.PageSize]; // todo rent
-            var read = stm.Read(buff, 0, header.PageSize);
-            if (read < header.PageSize)
-                throw new Exception("ReadEntryPageSequence: Read less than expected, data corrupted");
+                var read = stm.Read(buff, 0, header.PageSize);
+                if (read < header.PageSize)
+                    throw new Exception("ReadEntryPageSequence: Read less than expected, data corrupted");
 
-            var requestLength = remainLength > header.PageUserDataSize ? header.PageUserDataSize : remainLength;
+                var requestLength = remainLength > header.PageUserDataSize ? header.PageUserDataSize : remainLength;
 
-            listOfPages.Add(buff.AsMemory(0, requestLength));
-            remainLength -= requestLength;
+                resultStream.Write(buff, 0, requestLength);
+                remainLength -= requestLength;
 
-            currentPageIndex = BitConverter.ToInt32(buff, header.PageUserDataSize);
+                currentPageIndex = BitConverter.ToInt32(buff, header.PageUserDataSize);
+            }
+        }
+        finally
+        {
+            pool.Return(buff);
         }
 
-        var entirePages = mergeToArray(listOfPages);
+        var entirePages = resultStream.ToArray();
         return header.DataHandler.Unpack(entirePages).ToArray();
     }
 
@@ -71,30 +95,30 @@ static class ReadExtenders
     internal static int[] ReadPageSequence(this Stream stm, PagedContainerHeader header, int startFromPage)
     {
         var pages            = new List<int>();
-        var buff             = new byte[4];
+        var buff             = (Span<byte>)stackalloc byte[4];
         var currentPageIndex = startFromPage;
         while (currentPageIndex > 0)
         {
             pages.Add(currentPageIndex);
 
-            stm.Position = currentPageIndex * header.PageSize + header.PageUserDataSize;
-            var read = stm.Read(buff, 0, buff.Length);
+            stm.Position = (long)currentPageIndex * header.PageSize + header.PageUserDataSize;
+            var read = stm.Read(buff);
             if (read < buff.Length) break;
 
-            currentPageIndex = BitConverter.ToInt32(buff, 0);
+            currentPageIndex = BitConverter.ToInt32(buff);
         }
 
         return pages.ToArray();
     }
 
-    static byte[] mergeToArray(List<Memory<byte>> segments)
+    static byte[] mergeToArray(List<byte[]> segments)
     {
         var accumulator = new byte[segments.Sum(p => p.Length)];
         var offset      = 0;
 
         foreach (var page in segments)
         {
-            page.CopyTo(accumulator.AsMemory(offset, page.Length));
+            Buffer.BlockCopy(page, 0, accumulator, offset, page.Length);
             offset += page.Length;
         }
 

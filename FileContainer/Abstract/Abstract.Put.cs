@@ -61,9 +61,9 @@ public abstract partial class PagedContainerAbstract
     PutAppendResult put(string key, byte[] data)
     {
         var rawLength = data.Length;
-        data = Header.DataHandler.Pack(data).ToArray();
+        var packedData = Header.DataHandler.Pack(data);
 
-        var requiredPages = Header.GetRequiredPages(data.Length);
+        var requiredPages = Header.GetRequiredPages(packedData.Length);
         var entryFlags    = Header.CompressType != PersistentContainerCompressType.None ? EntryFlags.Compressed : 0;
 
         if (entries.TryGet(key, out var existingEntry) && existingEntry != null)
@@ -85,19 +85,19 @@ public abstract partial class PagedContainerAbstract
                 allocatedPages = newPages;
             } // else no action - new data will written into existing pages 
 
-            Stream.WriteIntoPages(Header, data, 0, allocatedPages);
+            Stream.WriteIntoPages(Header, packedData, 0, allocatedPages);
             entries.Update(existingEntry,
                            allocatedPages.First(), allocatedPages.Last(),
-                           rawLength, data.Length,
+                           rawLength, packedData.Length,
                            entryFlags);
             return PutAppendResult.Updated;
         }
 
         var pages = pageAllocator.AllocatePages(requiredPages);
-        Stream.WriteIntoPages(Header, data, 0, pages);
+        Stream.WriteIntoPages(Header, packedData, 0, pages);
         entries.Add(new PagedContainerEntry(key,
                                             pages.First(), pages.Last(),
-                                            rawLength, data.Length,
+                                            rawLength, packedData.Length,
                                             entryFlags, DateTime.UtcNow));
         return PutAppendResult.Created;
     }

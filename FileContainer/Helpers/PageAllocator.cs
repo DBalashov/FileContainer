@@ -38,8 +38,8 @@ sealed class PageAllocator
     {
         this.header = header;
 
-        var buff = stm.ReadWithPageSequence(header, FIRST_PA_PAGE).Data;
-        pageAllocations = new ExpandableBitArray(header.DataHandler.Unpack(buff).ToArray());
+        var ps = stm.ReadWithPageSequence(header, FIRST_PA_PAGE);
+        pageAllocations = new ExpandableBitArray(header.DataHandler.Unpack(ps.Data));
     }
 
     /// <summary> write self into stm with allocate pages with self </summary>

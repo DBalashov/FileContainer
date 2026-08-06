@@ -14,14 +14,14 @@ sealed class GZipDataPacker : IDataPacker
 
     public Span<byte> Pack(Span<byte> data)
     {
-        using var stm = MemoryStreamManager.Instance.GetStream(); // new MemoryStream();
+        using var stm = MemoryStreamManager.Instance.GetStream();
         using (var gz = new GZipStream(stm, CompressionMode.Compress, true))
         {
             gz.Write(data);
             gz.Flush();
         }
 
-        return encryptorDecryptor.Encrypt(stm.ToArray());
+        return encryptorDecryptor.Encrypt(stm.GetBuffer().AsSpan(0, (int)stm.Length));
     }
 
     public Span<byte> Unpack(Span<byte> data)
@@ -34,15 +34,13 @@ sealed class GZipDataPacker : IDataPacker
 
             using (var gz = new GZipStream(st1, CompressionMode.Decompress, true))
             {
-                int read;
-                while ((read = gz.Read(buff, 0, buff.Length)) > 0)
-                    stm.Write(buff, 0, read);
+                gz.CopyTo(stm);
                 gz.Close();
             }
 
             st1.Close();
         }
 
-        return stm.ToArray();
+        return stm.GetBuffer().AsSpan(0, (int)stm.Length).ToArray();
     }
 }

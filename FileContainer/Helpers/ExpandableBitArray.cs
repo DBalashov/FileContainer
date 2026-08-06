@@ -26,14 +26,22 @@ public sealed class ExpandableBitArray
     }
 
     /// <summary> create bit array from bytes. If bytes unaligned to 4 bytes (32 bits) - array will expanded to nearest 4 byte length with zero bits </summary>
-    public ExpandableBitArray(byte[] bytes)
+    public ExpandableBitArray(ReadOnlySpan<byte> bytes)
     {
         var byteInValue = BPV / 8;
-        if (bytes.Length % byteInValue != 0)
-            Array.Resize(ref bytes, (bytes.Length / byteInValue + 1) * byteInValue);
+        var length = bytes.Length;
+        if (length % byteInValue != 0)
+        {
+            length = (length / byteInValue + 1) * byteInValue;
+        }
 
-        values = new uint[bytes.Length / byteInValue];
-        Buffer.BlockCopy(bytes, 0, values, 0, values.Length * byteInValue);
+        values = new uint[length / byteInValue];
+        bytes.CopyTo(MemoryMarshal.Cast<uint, byte>(values));
+    }
+
+    /// <summary> create bit array from bytes. If bytes unaligned to 4 bytes (32 bits) - array will expanded to nearest 4 byte length with zero bits </summary>
+    public ExpandableBitArray(byte[] bytes) : this((ReadOnlySpan<byte>)bytes)
+    {
     }
 
     /// <summary> Expand bit array to specified bits with zero bits. Bits will ceiling to 32 bits. </summary>
@@ -136,9 +144,12 @@ public sealed class ExpandableBitArray
         }
     }
 
+    /// <summary> return internal representation of bits. </summary>
+    public ReadOnlySpan<byte> GetReadOnlyBytes() =>
+        MemoryMarshal.Cast<uint, byte>(values);
+
     /// <summary> return internal representation of bits. Can be used in constructor for clone (for example) </summary>
-    public byte[] GetBytes() =>
-        MemoryMarshal.Cast<uint, byte>(values).ToArray();
+    public byte[] GetBytes() => GetReadOnlyBytes().ToArray();
 
     #region privates
 

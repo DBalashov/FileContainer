@@ -3,7 +3,7 @@
     <PropertyGroup>
         <LangVersion>11</LangVersion>
         <RootNamespace>FileContainer</RootNamespace>
-        <TargetFrameworks>net6.0;net7.0;net8.0;net9.0</TargetFrameworks>
+        <TargetFrameworks>net9.0;net10.0</TargetFrameworks>
         <Nullable>enable</Nullable>
         <AssemblyName>FileContainer</AssemblyName>
         <PackageId>FileContainer</PackageId>
@@ -25,9 +25,9 @@
     </ItemGroup>
 
     <ItemGroup>
-      <PackageReference Include="LZ4Codec" Version="2024.11.26" />
+      <PackageReference Include="LZ4Codec" Version="2026.8.6" />
       <PackageReference Include="Microsoft.IO.RecyclableMemoryStream" Version="3.0.1" />
-      <PackageReference Include="SpanByteExtenders" Version="2024.11.26" />
+      <PackageReference Include="SpanByteExtenders" Version="2025.11.12" />
     </ItemGroup>
 
 </Project>

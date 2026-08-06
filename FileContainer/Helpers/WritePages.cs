@@ -1,4 +1,5 @@
 using System;
+using System.Buffers;
 using System.IO;
 
 namespace FileContainer;
@@ -14,31 +15,40 @@ static class WriteExtenders
     {
         var currentPageIndex = 0;
 
-        var page = new byte[header.PageSize].AsSpan();
-        foreach (var pageIndex in targetPages)
+        var pool = ArrayPool<byte>.Shared;
+        var buff = pool.Rent(header.PageSize);
+        var page = buff.AsSpan(0, header.PageSize);
+        try
         {
-            var writeLength = data.Length - offset;
-            if (writeLength > header.PageUserDataSize)
+            foreach (var pageIndex in targetPages)
             {
-                data.Slice(offset, header.PageUserDataSize).CopyTo(page);
-                offset += header.PageUserDataSize;
+                var writeLength = data.Length - offset;
+                if (writeLength > header.PageUserDataSize)
+                {
+                    data.Slice(offset, header.PageUserDataSize).CopyTo(page);
+                    offset += header.PageUserDataSize;
+                }
+                else
+                {
+                    page.Clear();
+                    data.Slice(offset, writeLength).CopyTo(page);
+                    offset += writeLength;
+                }
+
+                BitConverter.TryWriteBytes(page.Slice(header.PageUserDataSize),
+                                           currentPageIndex + 1 < targetPages.Length ? targetPages[currentPageIndex + 1] : 0);
+
+                var newPosition = (long)header.PageSize * pageIndex;
+                if (newPosition != stm.Position)
+                    stm.Position = newPosition;
+                stm.Write(page);
+
+                currentPageIndex++;
             }
-            else
-            {
-                page.Clear();
-                data.Slice(offset, writeLength).CopyTo(page);
-                offset += writeLength;
-            }
-
-            BitConverter.TryWriteBytes(page.Slice(header.PageUserDataSize),
-                                       currentPageIndex + 1 < targetPages.Length ? targetPages[currentPageIndex + 1] : 0);
-
-            var newPosition = header.PageSize * pageIndex;
-            if (newPosition != stm.Position)
-                stm.Position = newPosition;
-            stm.Write(page);
-
-            currentPageIndex++;
+        }
+        finally
+        {
+            pool.Return(buff);
         }
     }
 }
